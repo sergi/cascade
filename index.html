@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>Hello World!</title>
+<link rel="stylesheet" type="text/css" href="css/w2ui-1.2.min.css" />
+<link rel="stylesheet" type="text/css" href="css/style.css" />
+<script type="text/javascript" src="js/jquery-2.0.3.min.js"></script>
+<script type="text/javascript" src="js/w2ui-1.2.min.js"></script>
+<script type="text/javascript" src="js/moment.min.js"></script>
+<script type="text/javascript" src="js/filter_basic.js"></script>
+<script type="text/javascript" src="js/user_list.js"></script>
+
+</head>
+<body>
+<div id="layout" style="position: absolute; top:0px; bottom: 0px;width: 100%"></div>
+<script src="main.js"></script>
+</body>
+<script>
+var pstyle = 'border: 1px solid #dfdfdf; padding: 0px;';
+$('#layout').w2layout({
+  name: 'layout',
+  padding: 1,
+  resizer: 2,
+  panels: [
+    {
+    type: 'left',
+    size: 150,
+    resizable: true,
+    style: pstyle,
+    content: 'left',
+    height: window.innerHeight
+  },
+  { type: 'main', style: pstyle, content: '', height: window.innerHeight },
+  { type: 'right', size: 90, resizable: true, style: pstyle, content: 'right', height: window.innerHeight }
+  ]
+});
+
+w2ui['layout'].content('left', $().w2sidebar({
+  name: 'sidebar',
+  img: null,
+  nodes: [ ],
+//  onClick: function (cmd) {
+//    w2ui['layout'].content('main', 'id: ' + cmd);
+//  }
+}));
+</script>
+</html>

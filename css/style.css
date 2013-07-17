@@ -1,0 +1,26 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+@font-face
+{
+  font-family: Ubuntu;
+  src: url('Ubuntu-Regular.ttf');
+}
+
+.w2ui-panel-content {
+  font-family: 'Ubuntu';
+  font-size: 13px;
+}
+
+.mentioned {
+  font-weight: bold;
+}
+
+.message {
+  display: inline-block;
+  line-height: 1.2;
+  margin-top: 4px;
+}
+
