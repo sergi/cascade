@@ -18,7 +18,7 @@ UserList.prototype.refresh = function(userList) {
   var fragment = document.createDocumentFragment();
   var userNames = Object.keys(userList).sort();
 
-  for (var i=0, l=userNames.length; i < l; i++)
+  for (var i = 0, l = userNames.length; i < l; i++)
     fragment.appendChild(createDiv(userNames[i]));
 
   while (this.listElement.firstChild)
@@ -26,5 +26,3 @@ UserList.prototype.refresh = function(userList) {
 
   this.listElement.appendChild(fragment);
 };
-
-
