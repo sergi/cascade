@@ -1,5 +1,5 @@
-/*global w2ui */
 'use strict';
+
 var events = require('events');
 var async = require('async');
 var irc = require('irc');
@@ -7,42 +7,40 @@ var irc = require('irc');
 require('nw.gui').Window.get().showDevTools()
 var Channels = {};
 
-function Channel(name, nicks) {
-  this.userList = new UserList(this);
-  this.userList.refresh(nicks);
-  this.name = name.replace('#', '');
+var escapeRegExp;
 
-  var self = this;
-  Client.on('message#' + this.name, function(from, message) {
-    self.append(FilterBasic({
-      from: from,
-      message: message,
-      channel: '#' + self.name
-    }));
-  });
+(function() {
+  // Referring to the table here:
+  // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/regexp
+  // these characters should be escaped
+  // \ ^ $ * + ? . ( ) | { } [ ]
+  // These characters only have special meaning inside of brackets
+  // they do not need to be escaped, but they MAY be escaped
+  // without any adverse effects (to the best of my knowledge and casual testing)
+  // : ! , =
+  // my test "~!@#$%^&*(){}[]`/=?+\|-_;:'\",<.>".match(/[\#]/g)
 
-  Client.on('join#' + this.name, function(from, message) {
-    self.userList.refresh();
-  });
+  var specials = [
+    // order matters for these
+    "-", "[", "]"
+    // order doesn't matter for any of these
+    , "/", "{", "}", "(", ")", "*", "+", "?", ".", "\\", "^", "$", "|"
+  ];
 
-  Client.on('part#' + this.name, function(from, message) {
-    self.userList.refresh();
-  });
-};
+  // I choose to escape every character with '\'
+  // even though only some strictly require it when inside of []
+  var regex = new RegExp('[' + specials.join('\\') + ']', 'g');
 
-Channel.prototype.append = function(div) {
-  $('#content')[0].appendChild(div);
-};
-
-Channel.prototype.getUsers = function() {
-  return Client.chans['#' + this.name].users;
-};
+  escapeRegExp = function(str) {
+    return str.replace(regex, "\\$&");
+  };
+}());
 
 function ChannelCtrl($scope, ircService) {
   $scope.channels = {};
   $scope.currentChannel = null;
-  var channelContent = document.querySelector('.channel-content');
 
+  var channelContent = document.querySelector('.channel-content');
   var switchChannel = $scope.switchToChannel = function(name) {
     if (typeof name !== 'string')
       name = name.name;
@@ -86,6 +84,15 @@ function ChannelCtrl($scope, ircService) {
 
   client.on('message', function(from, to, text, message) {
     if (Object.keys($scope.channels).indexOf(to) !== -1) {
+      var ch = $scope.channels[to];
+      var usernames = Object.keys(ch.users);
+      for (var i = 0; i < usernames.length; i++) {
+        var re = new RegExp('(' + escapeRegExp(usernames[i]) + ')');
+        if (text.search(re) !== -1) {
+          text = text.replace(re, '<b>$1</b>');
+        }
+      }
+
       $scope.channels[to].log.push({
         time: moment().format('H:mm:ss'),
         from: from,
@@ -152,7 +159,7 @@ function ChannelCtrl($scope, ircService) {
       });
     });
   });
-  client.connect()
+  client.connect();
 }
 
 angular.module("cascade", ['pasvaz.bindonce'])

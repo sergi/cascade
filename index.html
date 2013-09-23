@@ -22,8 +22,7 @@
 
   <div class="channel-main">
     <div id="lines" class="channel-content">
-
-      <div class="msg" bindonce ng-repeat="line in currentChannel.log">
+      <div class="msg" bindonce ng-repeat="line in currentChannel.log" >
         <table width="100%" cellspacing="0" cellpadding="0">
           <tbody>
           <tr>
@@ -31,8 +30,8 @@
               <p class="from" style="margin-top: 0;">{{line.from}}</p>
             </td>
             <td id="block2" class="messageBlock">
-              <p class="time">{{line.time}}</p>
-              <p class="text" style="margin-top: 0;">{{line.text}}</p></td>
+              <p class="time" >{{line.time}}</p>
+              <p class="text" ng-bind-html-unsafe="line.text" style="margin-top: 0;">{{line.text}}</p></td>
           </tr>
           </tbody>
         </table>
