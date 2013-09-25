@@ -7,44 +7,27 @@ var irc = require('irc');
 require('nw.gui').Window.get().showDevTools()
 var Channels = {};
 
-var escapeRegExp;
+function ChannelListCtrl($scope, ircService) {
+  var client = ircService.client;
 
-(function() {
-  // Referring to the table here:
-  // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/regexp
-  // these characters should be escaped
-  // \ ^ $ * + ? . ( ) | { } [ ]
-  // These characters only have special meaning inside of brackets
-  // they do not need to be escaped, but they MAY be escaped
-  // without any adverse effects (to the best of my knowledge and casual testing)
-  // : ! , =
-  // my test "~!@#$%^&*(){}[]`/=?+\|-_;:'\",<.>".match(/[\#]/g)
+}
 
-  var specials = [
-    // order matters for these
-    "-", "[", "]"
-    // order doesn't matter for any of these
-    , "/", "{", "}", "(", ")", "*", "+", "?", ".", "\\", "^", "$", "|"
-  ];
-
-  // I choose to escape every character with '\'
-  // even though only some strictly require it when inside of []
-  var regex = new RegExp('[' + specials.join('\\') + ']', 'g');
-
-  escapeRegExp = function(str) {
-    return str.replace(regex, "\\$&");
-  };
-}());
-
-function ChannelCtrl($scope, ircService) {
+function ChannelCtrl($scope, $compile, ircService) {
   $scope.channels = {};
   $scope.currentChannel = null;
 
-  var channelContent = document.querySelector('.channel-content');
-  var switchChannel = $scope.switchToChannel = function(name) {
-    if (typeof name !== 'string')
-      name = name.name;
+  function getCurrentChannelEl(name) {
+    var el = document.getElementById('channel-pane-' + getChannelName(name));
+    return el;
+  }
 
+  function getChannelName(name) {
+    return name[0] === '#' ?
+      name.substr(1, name.length - 1) : name;
+  }
+
+  $scope.switchToChannel = function(name) {
+    var channelContent = getCurrentChannelEl(name);
     if ($scope.channels[name]) {
       $scope.currentChannel = $scope.channels[name];
       setTimeout(function() {
@@ -64,9 +47,29 @@ function ChannelCtrl($scope, ircService) {
       };
     }
 
+    $scope.isCurrentChannel = function isCurrentChannel(name) {
+      if ($scope.currentChannel && ($scope.currentChannel.name === name) ||
+        $scope.currentChannel.name === '#' + name) {
+        return true;
+      }
+      return false;
+    };
+
+    var channelName = getChannelName(channel);
+    if (!document.getElementById('channel-pane-' + channelName)) {
+      var el = $compile(
+        '<div id="channel-pane-' + channelName + '" ' +
+        'class="channel-content ' + (isServer ? 'server-line' : '') +
+        '" ng-include src="\'view-channel.html\'" ' +
+        'ng-show="isCurrentChannel(\'' + channelName + '\')">' +
+        '</div>')($scope)[0];
+
+      document.getElementById('channel-main').appendChild(el);
+    }
+
     if (!$scope.currentChannel) {
       $scope.$apply(function() {
-        switchChannel($scope.channels[channel]);
+        $scope.currentChannel = $scope.channels[channel];
       });
     }
 
@@ -74,6 +77,13 @@ function ChannelCtrl($scope, ircService) {
   }
 
   var client = ircService.client;
+  client.on('motd', function(motd) {
+    motd = motd.split(/\n\r?/);
+    motd.forEach(function(line) {
+      ircService.eventEmitter.emit('serverMessage', line);
+    });
+  });
+
   client.on('names', function(channel, nicks) {
     var ch = createChannel(channel);
     $scope.$apply(function() {
@@ -103,10 +113,20 @@ function ChannelCtrl($scope, ircService) {
       // Force update if it is the current channel. There must be another way.
       if ($scope.currentChannel.name === to) {
         $scope.$apply(function() {
-          switchChannel($scope.currentChannel);
+          $scope.currentChannel = $scope.channels[to];
         });
       }
     }
+  });
+  ircService.eventEmitter.on('serverMessage', function(line) {
+    $scope.$apply(function() {
+      $scope.channels['  ' + ircService.server].log.push({
+        time: moment().format('H:mm:ss'),
+        from: '',
+        to: '',
+        text: line,
+      });
+    });
   });
 
   client.on('join', function(channel, nick, message) {
@@ -114,7 +134,7 @@ function ChannelCtrl($scope, ircService) {
     if (nick === client.nick) {
       console.log('JOIN', channel, nick);
       $scope.$apply(function() {
-        switchChannel(ch);
+        $scope.currentChannel = ch;
       });
     }
   });
@@ -123,12 +143,6 @@ function ChannelCtrl($scope, ircService) {
     createChannel('  ' + ircService.server, true);
   });
 
-  client.on('motd', function(motd) {
-    motd = motd.split(/\n\r?/);
-    motd.forEach(function(line) {
-      ircService.eventEmitter.emit('serverMessage', line);
-    });
-  });
 
   client.on('raw', function(msg) {
     if (msg.server && !ircService.server) {
@@ -149,16 +163,6 @@ function ChannelCtrl($scope, ircService) {
     console.log('ERROR', message);
   });
 
-  ircService.eventEmitter.on('serverMessage', function(line) {
-    $scope.$apply(function() {
-      $scope.channels['  ' + ircService.server].log.push({
-        time: moment().format('H:mm:ss'),
-        from: '',
-        to: '',
-        text: line,
-      });
-    });
-  });
   client.connect();
 }
 

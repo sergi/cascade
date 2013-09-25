@@ -2,7 +2,6 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
   font-family: 'Ubuntu';
   font-size: 12px;
   overflow: hidden;
@@ -25,11 +24,14 @@ html, body {
   margin-top: 4px;
 }
 
-.channel-main {
+#channel-main {
+
+  -webkit-box-shadow: 0px 0px 8px 2px rgba(0, 0, 0, 0.57);
+  box-shadow: 0px 0px 8px 2px rgba(0, 0, 0, 0.57);
   overflow: hidden;
   height:100%;
-  margin: 0 12%;
-  padding: 2px;
+  /*margin: 0 12%;*/
+float:left;
 }
 
 .channel-content {
@@ -69,9 +71,12 @@ html, body {
   min-width: 120px;
   margin:0;
   padding: 5px;
-  background-color: #f0f0f0;
+  background-color: #353535;
 }
 
+.channel-content {
+
+}
 .main {
   overflow:hidden;
   position: absolute;
@@ -128,16 +133,20 @@ html, body {
   padding: 3px;
 }
 
-.listitem {
-  color: #000;
+.channel-list .item {
+  color:#c6c8c8;
   font-size: 14px;
   display: block;
   text-decoration: none;
   margin:0;
   width: 100%;
-  line-height: 120%;
+  line-height: 150%;
+overflow-x: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
 }
-.listitem:active {
+
+.channel-list .item:active {
   color: #000;
   background-color: #999;
 }
@@ -146,7 +155,7 @@ html, body {
   font-weight: bold;
 }
 
-td.nameBlock {
+.msg .nameBlock {
   width: 110px;
   background-color: #f7f7f7;
   /*border-top: 1px solid #fff;*/
@@ -156,6 +165,10 @@ td.nameBlock {
   text-align: right;
 }
 
-#lines p {
+.channel-content.server-line .nameBlock {
+  display: none;
+}
+
+.channel-content p {
   margin: 0 10px;
 }

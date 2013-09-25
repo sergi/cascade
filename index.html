@@ -2,6 +2,7 @@
 <head>
 <title>Hello World!</title>
 <link rel="stylesheet" type="text/css" href="css/style.css" />
+<script type="text/javascript" src="util.js"></script>
 <script type="text/javascript" src="js/angular.min.js"></script>
 <script type="text/javascript" src="js/bindonce.js"></script>
 <script type="text/javascript" src="js/moment.min.js"></script>
@@ -13,33 +14,16 @@
 <body>
 <div class="main" ng-controller="ChannelCtrl">
   <div class="channel-list" >
-    <div ng-class="{server: channel.isServer}" class="channel listitem"
+    <div ng-class="{server: channel.isServer}" class="channel item"
       ng-repeat="channel in channels"
       ng-click="switchToChannel(channel.name)">
       {{channel.name}}
     </div>
   </div>
 
-  <div class="channel-main">
-    <div id="lines" class="channel-content">
-      <div class="msg" bindonce ng-repeat="line in currentChannel.log" >
-        <table width="100%" cellspacing="0" cellpadding="0">
-          <tbody>
-          <tr>
-            <td class="nameBlock">
-              <p class="from" style="margin-top: 0;">{{line.from}}</p>
-            </td>
-            <td id="block2" class="messageBlock">
-              <p class="time" >{{line.time}}</p>
-              <p class="text" ng-bind-html-unsafe="line.text" style="margin-top: 0;">{{line.text}}</p></td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  <div id="channel-main"></div>
 
-  <div class="user-list">
+  <div class="user-list" ng-show="!currentChannel.isServer">
     <div class="username listitem" bindonce
       ng-repeat="(user, status) in currentChannel.users">{{user}}</div>
   </div>
