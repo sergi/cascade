@@ -11,8 +11,10 @@
 <!--<script type="text/javascript" src="js/user_list.js"></script>-->
 
 </head>
-<body>
-<div class="main" ng-controller="ChannelCtrl">
+<body class="cascade">
+<div class="container" ng-controller="ChannelCtrl">
+  <div id="channel-main"></div>
+
   <div class="channel-list" >
     <div ng-class="{server: channel.isServer}" class="channel item"
       ng-repeat="channel in channels"
@@ -20,8 +22,6 @@
       {{channel.name}}
     </div>
   </div>
-
-  <div id="channel-main"></div>
 
   <div class="user-list" ng-show="!currentChannel.isServer">
     <div class="username listitem" bindonce
