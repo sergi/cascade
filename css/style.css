@@ -35,21 +35,20 @@ html, body {
 .channel-content {
   overflow-y: auto;
   height: 100%;
+  display: -webkit-flex;
 }
 
 .user-list {
+  height:100%;
   padding-left: 3px;
   padding-right: 3px;
   background-color: #f0f0f0;
   overflow-y: auto;
   overflow-x: hidden;
+  float: right;
+  -webkit-flex: 0 0 12em;
 }
 
-.user-list li {
-  list-style-type: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
 
 .user-overlay {
   overflow-y: auto;
@@ -66,9 +65,6 @@ html, body {
   -webkit-flex: 0 0 12em;
 }
 
-.channel-content {
-
-}
 .cascade {
   display: -webkit-flex;
   min-height: 100%;
@@ -159,4 +155,8 @@ html, body {
 
 .channel-content p {
   margin: 0 10px;
+}
+
+.msg-container {
+  -webkit-flex: 1;
 }

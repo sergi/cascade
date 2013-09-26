@@ -1,31 +1,23 @@
 <html ng-app="cascade">
 <head>
 <title>Hello World!</title>
+<link rel="stylesheet" type="text/css" href="css/topcoat-desktop-light.min.css" />
 <link rel="stylesheet" type="text/css" href="css/style.css" />
 <script type="text/javascript" src="util.js"></script>
 <script type="text/javascript" src="js/angular.min.js"></script>
 <script type="text/javascript" src="js/bindonce.js"></script>
 <script type="text/javascript" src="js/moment.min.js"></script>
-
-<!--<script type="text/javascript" src="js/filter_basic.js"></script>-->
-<!--<script type="text/javascript" src="js/user_list.js"></script>-->
-
 </head>
 <body class="cascade">
 <div class="container" ng-controller="ChannelCtrl">
   <div id="channel-main"></div>
 
   <div class="channel-list" >
-    <div ng-class="{server: channel.isServer}" class="channel item"
+    <div class="channel item"
       ng-repeat="channel in channels"
-      ng-click="switchToChannel(channel.name)">
-      {{channel.name}}
+      ng-click="switchToChannel(channel)">
+      {{channel}}
     </div>
-  </div>
-
-  <div class="user-list" ng-show="!currentChannel.isServer">
-    <div class="username listitem" bindonce
-      ng-repeat="(user, status) in currentChannel.users">{{user}}</div>
   </div>
 </div>
 
