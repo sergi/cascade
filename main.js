@@ -16,9 +16,29 @@ function getCurrentChannelEl(name) {
   return el;
 }
 
+function ServerCtrl($scope, ircService) {
+  $scope.logs = [];
+
+  function msg(obj) {
+    obj.time = moment().format('H:mm:ss');
+    $scope.logs.push(obj);
+  }
+
+  var client = ircService.client;
+  client.on('motd', function(motd) {
+    motd = motd.split(/\n\r?/);
+    motd.forEach(function(line) {
+      msg({
+        text: line
+      });
+    });
+    $scope.$apply();
+  });
+}
+
 function ChanCtrl($scope, ircService) {
   var client = ircService.client;
-  var _name;
+  var name;
 
   function msg(obj) {
     obj.time = moment().format('H:mm:ss');
@@ -29,15 +49,19 @@ function ChanCtrl($scope, ircService) {
 
   $scope.logs = [];
   $scope.nicks = [];
+  $scope.topic = '';
 
   $scope.init = function(_name) {
+    name = _name;
+
     client.on('names#' + _name, function(nicks) {
       $scope.$apply(function() {
         $scope.nicks = nicks;
       });
     });
 
-    client.on('topic', function(channel, topic, nick, msg) {
+    client.on('topic', function(channel, topic, nick, message) {
+      channel = cleanName(channel);
       if (channel === _name) {
         msg({
           text: 'Topic is ' + topic,
@@ -64,6 +88,7 @@ function ChanCtrl($scope, ircService) {
 }
 
 function ChannelCtrl($scope, $compile, ircService) {
+  var client = ircService.client;
   $scope.currentChannel = null;
   $scope.channels = [];
 
@@ -71,9 +96,11 @@ function ChannelCtrl($scope, $compile, ircService) {
     $scope.currentChannel = cleanName(name);
 
     var el = getCurrentChannelEl(name);
-    setTimeout(function() {
-      el.scrollTop = el.scrollHeight;
-    }, 10);
+    if (el) {
+      setTimeout(function() {
+        el.scrollTop = el.scrollHeight;
+      }, 10);
+    }
   };
 
   $scope.isCurrentChannel = function(name) {
@@ -84,16 +111,23 @@ function ChannelCtrl($scope, $compile, ircService) {
   function createChannel(channel, isServer) {
     var name = cleanName(channel);
     if (!document.getElementById('channel-pane-' + name)) {
-      var el = $compile(
-        '<div id="channel-pane-' + name + '" ' +
-        'class="channel-content ' + (isServer ? 'server-line" ' : '" ') +
-        'ng-controller="ChanCtrl" ' +
-        'ng-init="init(\'' + name + '\')" ' +
-        'ng-include src="\'view-channel.html\'" ' +
-        'ng-show="isCurrentChannel(\'' + name + '\')">' +
-        '</div>')($scope)[0];
+      var el;
+      if (!isServer) {
+        el = $compile(
+          '<div id="channel-pane-' + name + '" ' +
+          'class="channel-content ' + (isServer ? 'server-line" ' : '" ') +
+          'ng-controller="ChanCtrl" ' +
+          'ng-init="init(\'' + name + '\')" ' +
+          'ng-include src="\'view-channel.html\'" ' +
+          'ng-show="isCurrentChannel(\'' + name + '\')">' +
+          '</div>')($scope)[0];
+      } else {
+        el = $compile('<div class="server" ng-include="\'view-server.html\'" ' +
+          'ng-show="isCurrentChannel(\'' + name + '\')" ' +
+          'ng-controller="ServerCtrl"></div>')($scope)[0];
+      }
 
-      document.getElementById('channel-main').appendChild(el)
+      document.getElementById('channel-main').appendChild(el);
     }
 
     $scope.$apply(function() {
@@ -109,13 +143,6 @@ function ChannelCtrl($scope, $compile, ircService) {
     return channel;
   }
 
-  var client = ircService.client;
-  client.on('motd', function(motd) {
-    motd = motd.split(/\n\r?/);
-    motd.forEach(function(line) {
-      ircService.eventEmitter.emit('serverMessage', line);
-    });
-  });
 
   /*
   client.on('+mode', function(channel, by, mode, argument, msg) {
@@ -136,34 +163,35 @@ function ChannelCtrl($scope, $compile, ircService) {
   });
 */
 
-  ircService.eventEmitter.on('serverMessage', function(line) {
-    /*    $scope.channels['  ' + ircService.server].log.push({*/
-    //time: moment().format('H:mm:ss'),
-    //from: '',
-    //text: line,
-    //});
-    /*$scope.$apply();*/
-  });
-
   client.on('join', function(channel, nick, message) {
     var ch = createChannel(channel);
     if (nick === client.nick) {
-      console.log('JOIN', channel, nick);
+      console.log('JOIN', channel, nick, message);
       $scope.$apply(function() {
         $scope.currentChannel = cleanName(channel);
       });
     }
   });
 
-  client.on('registered', function(message) {
-    createChannel('  ' + ircService.server, true);
+  client.on('ctcp', function(from, to, text, type, msg) {
+    var ch = createChannel(channel);
+    if (nick === client.nick) {
+      console.log("CTCP", from, to, text)
+      $scope.$apply(function() {
+        $scope.currentChannel = cleanName(channel);
+      });
+    }
   });
 
+
+  client.on('registered', function(message) {
+    createChannel(ircService.server, true);
+  });
 
   client.on('raw', function(msg) {
     if (msg.server && !ircService.server) {
       ircService.server = msg.server;
-      createChannel('  ' + msg.server, true);
+      createChannel(msg.server, true);
     }
 
     switch (msg.rawCommand) {
