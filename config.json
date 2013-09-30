@@ -1,0 +1,14 @@
+{
+  "servers": [
+    {
+      "address": "chat.freenode.net",
+      "channels": ["#ubuntu", "#ubuntu22"],
+      "nick": "sergi_22"
+    },
+    {
+      "address": "irc.mozilla.org",
+      "channels": ["#testttt"],
+      "nick": "sergi_22"
+    }
+  ]
+}

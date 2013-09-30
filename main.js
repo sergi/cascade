@@ -1,10 +1,14 @@
 'use strict';
 
 var events = require('events');
-var async = require('async');
 var irc = require('irc');
+var gui = require('nw.gui');
+var fs = require('fs');
 
-require('nw.gui').Window.get().showDevTools()
+gui.Window.get().showDevTools()
+gui.Window.get().menu = new gui.Menu({ type: 'menubar' });
+
+var Config = JSON.parse(fs.readFileSync('config.json', { encoding: 'utf8' }));
 
 function cleanName(name) {
   return name[0] === '#' ?
@@ -16,7 +20,7 @@ function getCurrentChannelEl(name) {
   return el;
 }
 
-function ServerCtrl($scope, ircService) {
+function ServerCtrl($scope) {
   $scope.logs = [];
 
   function msg(obj) {
@@ -24,43 +28,64 @@ function ServerCtrl($scope, ircService) {
     $scope.logs.push(obj);
   }
 
-  var client = ircService.client;
-  client.on('motd', function(motd) {
+  var ircServer = $scope.$parent.server.ircServer;
+
+  ircServer.on('motd', function(motd) {
     motd = motd.split(/\n\r?/);
     motd.forEach(function(line) {
-      msg({
-        text: line
-      });
+      msg({ text: line });
     });
     $scope.$apply();
   });
+
+  ircServer.on('raw', function(message) {
+    switch (message.rawCommand) {
+      case ('001'):
+      case ('002'):
+      case ('003'):
+        msg({ text: message.args[1] });
+        break;
+    }
+  });
+
+  ircServer.on('error', function(message) {
+    console.log('ERROR', message);
+  });
+
+  ircServer.connect();
 }
 
-function ChanCtrl($scope, ircService) {
-  var client = ircService.client;
-  var name;
-
-  function msg(obj) {
-    obj.time = moment().format('H:mm:ss');
-    $scope.$apply(function() {
-      $scope.logs.push(obj);
-    });
-  }
-
+function ChanCtrl($scope) {
   $scope.logs = [];
   $scope.nicks = [];
   $scope.topic = '';
 
-  $scope.init = function(_name) {
-    name = _name;
+  $scope.init = function(channelName, serverName) {
+    var _name = channelName;
+    var serverObj = $scope.$parent.getServerByName(serverName);
+    var ircServer = serverObj.ircServer;
 
-    client.on('names#' + _name, function(nicks) {
+    $scope.serverAddress = serverObj.address;
+
+    function msg(obj) {
+      obj.time = moment().format('H:mm:ss');
+      $scope.$apply(function() {
+        $scope.logs.push(obj);
+      });
+    }
+
+    if (!ircServer) {
+      console.error("No server found for channel " + _name);
+      return;
+    }
+
+    ircServer.on('names#' + _name, function(nicks) {
       $scope.$apply(function() {
         $scope.nicks = nicks;
       });
     });
 
-    client.on('topic', function(channel, topic, nick, message) {
+    ircServer.on('topic', function(channel, topic, nick, message) {
       channel = cleanName(channel);
       if (channel === _name) {
         msg({
@@ -70,7 +95,7 @@ function ChanCtrl($scope, ircService) {
       }
     });
 
-    client.on('message#' + _name, function(from, text, message) {
+    ircServer.on('message#' + _name, function(from, text, message) {
       var usernames = Object.keys($scope.nicks);
       for (var i = 0; i < usernames.length; i++) {
         var re = new RegExp('(' + escapeRegExp(usernames[i]) + ')');
@@ -81,19 +106,90 @@ function ChanCtrl($scope, ircService) {
 
       msg({
         from: from,
-        text: text,
+        text: text
       });
     });
-  };
+
+    ircServer.on('+mode', function(channel, by, mode, argument, _msg) {
+      var usernames = Object.keys($scope.nicks);
+      by = by || serverObj.address;
+      var line = by + ' sets mode +' + mode;
+
+      if (argument && usernames.indexOf(argument) !== -1) {
+        line += ' ' + argument;
+      }
+
+      msg({
+        text: line,
+        isMeta: true
+      });
+    });
+  }
 }
 
-function ChannelCtrl($scope, $compile, ircService) {
-  var client = ircService.client;
-  $scope.currentChannel = null;
-  $scope.channels = [];
+function AppController($scope, $compile) {
+  $scope.servers = [];
+  $scope.getServerByName = function(name) {
+    var servers = $scope.servers;
+    for (var i = 0; i < servers.length; i++) {
+      if (servers[i].address === name)
+        return servers[i];
+    }
+  };
 
-  $scope.switchToChannel = function(name) {
+  Config.servers.forEach(function(server) {
+    var ircServer = new irc.Client(server.address, server.nick, {
+      channels: server.channels,
+      autoConnect: false
+    });
+
+    var _server = {
+      address: server.address,
+      ircServer: ircServer,
+      channels: []
+    };
+
+    ircServer.on('join', function(channel, nick, message) {
+        channel = cleanName(channel);
+        var channelExists = _server.channels.some(function(c) {
+          return c === channel;
+        });
+
+        if (channelExists) return;
+
+        if (!document.getElementById('channel-pane-' + channel)) {
+          var el = $compile(
+            '<div id="channel-pane-' + channel + '" ' +
+              'class="channel-content" ' +
+              'ng-controller="ChanCtrl" ' +
+              'ng-init="init(\'' + channel + '\', \'' + server.address + '\')"' +
+              'ng-include src="\'view-channel.html\'" ' +
+              'ng-show="isCurrentChannel(\'' + channel + '\', \'' + server.address + '\')">' +
+              '</div>')($scope)[0];
+
+          document.getElementById('channel-main').appendChild(el);
+        }
+
+        $scope.$apply(function() {
+          _server.channels.push(channel);
+          if (!$scope.currentChannel) {
+            $scope.switchToChannel(channel, server.address);
+          }
+        });
+      }
+    );
+
+    $scope.servers.push(_server);
+  });
+
+  $scope.currentServer = null;
+  $scope.currentChannel = null;
+
+  $scope.switchToChannel = function(name, server) {
+    console.log(name, server)
+    $scope.currentServer = server;
     $scope.currentChannel = cleanName(name);
+    document.title = $scope.currentChannel;
 
     var el = getCurrentChannelEl(name);
     if (el) {
@@ -103,150 +199,14 @@ function ChannelCtrl($scope, $compile, ircService) {
     }
   };
 
-  $scope.isCurrentChannel = function(name) {
-    return $scope.currentChannel &&
-      $scope.currentChannel === cleanName(name);
+  $scope.isCurrentChannel = function(channelName, server) {
+    if ($scope.currentServer === server &&
+      $scope.currentChannel === cleanName(channelName)) {
+      return true
+    }
+    return false;
   };
-
-  function createChannel(channel, isServer) {
-    var name = cleanName(channel);
-    if (!document.getElementById('channel-pane-' + name)) {
-      var el;
-      if (!isServer) {
-        el = $compile(
-          '<div id="channel-pane-' + name + '" ' +
-          'class="channel-content ' + (isServer ? 'server-line" ' : '" ') +
-          'ng-controller="ChanCtrl" ' +
-          'ng-init="init(\'' + name + '\')" ' +
-          'ng-include src="\'view-channel.html\'" ' +
-          'ng-show="isCurrentChannel(\'' + name + '\')">' +
-          '</div>')($scope)[0];
-      } else {
-        el = $compile('<div class="server" ng-include="\'view-server.html\'" ' +
-          'ng-show="isCurrentChannel(\'' + name + '\')" ' +
-          'ng-controller="ServerCtrl"></div>')($scope)[0];
-      }
-
-      document.getElementById('channel-main').appendChild(el);
-    }
-
-    $scope.$apply(function() {
-      if ($scope.channels.indexOf(channel) === -1) {
-        $scope.channels.push(channel);
-      }
-
-      if (!$scope.currentChannel) {
-        $scope.currentChannel = name;
-      }
-    });
-
-    return channel;
-  }
-
-
-  /*
-  client.on('+mode', function(channel, by, mode, argument, msg) {
-    var ch = createChannel(channel);
-    by = by || ircService.server;
-    var line = by + ' sets mode +' + mode;
-
-    var usernames = Object.keys(ch.users);
-    if (argument && usernames.indexOf(argument) !== -1) {
-      line += ' argument';
-    }
-
-    ch.log.push({
-      time: moment().format('H:mm:ss'),
-      text: line,
-      isMeta: true
-    });
-  });
-*/
-
-  client.on('join', function(channel, nick, message) {
-    var ch = createChannel(channel);
-    if (nick === client.nick) {
-      console.log('JOIN', channel, nick, message);
-      $scope.$apply(function() {
-        $scope.currentChannel = cleanName(channel);
-      });
-    }
-  });
-
-  client.on('ctcp', function(from, to, text, type, msg) {
-    var ch = createChannel(channel);
-    if (nick === client.nick) {
-      console.log("CTCP", from, to, text)
-      $scope.$apply(function() {
-        $scope.currentChannel = cleanName(channel);
-      });
-    }
-  });
-
-
-  client.on('registered', function(message) {
-    createChannel(ircService.server, true);
-  });
-
-  client.on('raw', function(msg) {
-    if (msg.server && !ircService.server) {
-      ircService.server = msg.server;
-      createChannel(msg.server, true);
-    }
-
-    switch (msg.rawCommand) {
-      case ('001'):
-      case ('002'):
-      case ('003'):
-        ircService.eventEmitter.emit('serverMessage', msg.args[1]);
-        break;
-    }
-  });
-
-  client.on('error', function(message) {
-    console.log('ERROR', message);
-  });
-
-  client.connect();
 }
 
-angular.module("cascade", ['pasvaz.bindonce'])
-  .service('ircService', function() {
-  var server = this.server = 'chat.freenode.net';
-  this.client = new irc.Client(server, 'sergi_222', {
-    channels: ['#ubuntu', '#ubuntu22'],
-    autoConnect: false
-  });
+angular.module('cascade', ['pasvaz.bindonce'])
 
-  this.eventEmitter = new events.EventEmitter();
-});
-
-/*
-mod.factory('pubsub', function() {
-  var cache = {};
-  return {
-    publish: function(topic, args) {
-      cache[topic] && cache[topic].forEach(function() {
-        this.apply(null, args || []);
-      });
-    },
-
-    subscribe: function(topic, callback) {
-      if (!cache[topic]) {
-        cache[topic] = [];
-      }
-      cache[topic].push(callback);
-      return [topic, callback];
-    },
-
-    unsubscribe: function(handle) {
-      var t = handle[0];
-      cache[t] && cache[t].forEach(function(idx) {
-        if (this == handle[1]) {
-          cache[t].splice(idx, 1);
-        }
-      });
-    }
-  };
-});
-*/

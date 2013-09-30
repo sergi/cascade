@@ -1,9 +1,9 @@
 @font-face {
   font-family: Ubuntu;
-  src: url('Ubuntu-Regular.ttf');
+  src: url('FiraSans-Regular.ttf');
 }
 
-* { margin:0; padding:0; }
+* { margin: 0; padding: 0; }
 
 html, body {
   font-family: 'Ubuntu';
@@ -17,21 +17,23 @@ html, body {
   min-height: 100%;
   -webkit-flex-direction: column;
 }
+
 .container {
   height: calc(100% - 25px);
   display: -webkit-flex;
   -webkit-flex: 1;
-
-  overflow:hidden;
+  overflow: hidden;
   width: 100%;
 }
+
 #channel-main {
   min-width: 300px;
   -webkit-box-shadow: 0px 0px 8px 2px rgba(0, 0, 0, 0.57);
   box-shadow: 0px 0px 8px 2px rgba(0, 0, 0, 0.57);
   overflow: hidden;
-  height:100%;
-  -webkit-flex:1;
+  height: 100%;
+  -webkit-flex: 1;
+  overflow-y: auto;
 }
 
 .channel-list {
@@ -39,12 +41,13 @@ html, body {
   background-color: #353535;
   -webkit-order: -1;
 }
+
 .channel-list .item {
-  color:#c6c8c8;
+  color: #c6c8c8;
   font-size: 14px;
   display: block;
   text-decoration: none;
-  margin:0;
+  margin: 0;
   width: 100%;
   line-height: 150%;
   overflow-x: hidden;
@@ -56,21 +59,25 @@ html, body {
   color: #000;
   background-color: #999;
 }
+
 .channel-content {
   overflow-y: auto;
   height: 100%;
   display: -webkit-flex;
 }
 
+.channel-content p {
+  word-break: break-word;
+}
+
 .user-list {
-  height:100%;
+  height: 100%;
   padding-left: 3px;
   padding-right: 3px;
   background-color: #f0f0f0;
   overflow-y: auto;
   overflow-x: hidden;
   float: right;
-  -webkit-flex: 0 0 12em;
 }
 
 .user-list, .channel-list {
@@ -81,7 +88,7 @@ html, body {
   width: 100%;
   border: 0;
   outline: none;
-  height:25px;
+  height: 25px;
 }
 
 .msg {
@@ -93,7 +100,7 @@ html, body {
 
 .msg .time {
   color: #ddd;
-  float:right;
+  float: right;
 }
 
 .msg .text, .msg .time, .msg .from {
@@ -103,7 +110,6 @@ html, body {
 .msg td {
   padding: 3px;
 }
-
 
 .msg .nameBlock {
   width: 110px;
@@ -125,7 +131,9 @@ html, body {
 
 .msg-container {
   -webkit-flex: 1;
+  overflow-y: auto;
 }
+
 .server {
   height: 100%;
   overflow-y: auto;

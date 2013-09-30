@@ -1,0 +1,11 @@
+<div class="msg" bindonce ng-repeat="line in logs" >
+  <table width="100%" cellspacing="0" cellpadding="0">
+    <tbody>
+    <tr>
+      <td id="block2" class="messageBlock">
+        <p class="time" >{{line.time}}</p>
+        <p class="text" ng-bind-html-unsafe="line.text" style="margin-top: 0;">{{line.text}}</p></td>
+    </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,23 +1,32 @@
 <html ng-app="cascade">
 <head>
-<title>Hello World!</title>
-<link rel="stylesheet" type="text/css" href="css/topcoat-desktop-light.min.css" />
-<link rel="stylesheet" type="text/css" href="css/style.css" />
-<script type="text/javascript" src="util.js"></script>
-<script type="text/javascript" src="js/angular.min.js"></script>
-<script type="text/javascript" src="js/bindonce.js"></script>
-<script type="text/javascript" src="js/moment.min.js"></script>
+  <title>Hello World!</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css"/>
+  <script type="text/javascript" src="util.js"></script>
+  <script type="text/javascript" src="js/angular.min.js"></script>
+  <script type="text/javascript" src="js/bindonce.js"></script>
+  <script type="text/javascript" src="js/moment.min.js"></script>
 </head>
 <body class="cascade">
-<div class="container" ng-controller="ChannelCtrl">
-  <div id="channel-main"></div>
-
-  <div class="channel-list" >
-    <div class="channel item"
-      ng-repeat="channel in channels"
-      ng-click="switchToChannel(channel)">
-      {{channel}}
+<div class="container" ng-controller="AppController">
+  <div id="channel-main">
+    <div class="server"
+         ng-include="'view-server.html'"
+         ng-repeat="server in servers"
+         ng-show="isFocused()"
+         ng-controller="ServerCtrl">
     </div>
+  </div>
+
+  <div class="channel-list">
+    <section ng-repeat="server in servers">
+      <h3>{{server.address}}</h3>
+      <ul>
+        <li ng-repeat="channel in server.channels"
+            ng-click="switchToChannel(channel, server.address)">{{channel}}
+        </li>
+      </ul>
+    </section>
   </div>
 </div>
 
