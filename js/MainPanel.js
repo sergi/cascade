@@ -1,2 +1,0 @@
-var MainPanel = function() {
-}

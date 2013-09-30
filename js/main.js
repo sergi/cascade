@@ -163,7 +163,7 @@ function AppController($scope, $compile) {
               'class="channel-content" ' +
               'ng-controller="ChanCtrl" ' +
               'ng-init="init(\'' + channel + '\', \'' + server.address + '\')"' +
-              'ng-include src="\'view-channel.html\'" ' +
+              'ng-include src="\'views/view-channel.html\'" ' +
               'ng-show="isCurrentChannel(\'' + channel + '\', \'' + server.address + '\')">' +
               '</div>')($scope)[0];
 
@@ -186,10 +186,9 @@ function AppController($scope, $compile) {
   $scope.currentChannel = null;
 
   $scope.switchToChannel = function(name, server) {
-    console.log(name, server)
     $scope.currentServer = server;
     $scope.currentChannel = cleanName(name);
-    document.title = $scope.currentChannel;
+    document.title = 'Cascade IRC - #' + $scope.currentChannel;
 
     var el = getCurrentChannelEl(name);
     if (el) {

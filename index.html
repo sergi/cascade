@@ -1,17 +1,17 @@
 <html ng-app="cascade">
 <head>
-  <title>Hello World!</title>
+  <title>Cascade IRC</title>
   <link rel="stylesheet" type="text/css" href="css/style.css"/>
-  <script type="text/javascript" src="util.js"></script>
-  <script type="text/javascript" src="js/angular.min.js"></script>
-  <script type="text/javascript" src="js/bindonce.js"></script>
-  <script type="text/javascript" src="js/moment.min.js"></script>
+  <script type="text/javascript" src="js/util.js"></script>
+  <script type="text/javascript" src="lib/angular.min.js"></script>
+  <script type="text/javascript" src="lib/bindonce.js"></script>
+  <script type="text/javascript" src="lib/moment.min.js"></script>
 </head>
 <body class="cascade">
 <div class="container" ng-controller="AppController">
   <div id="channel-main">
     <div class="server"
-         ng-include="'view-server.html'"
+         ng-include="'views/view-server.html'"
          ng-repeat="server in servers"
          ng-show="isFocused()"
          ng-controller="ServerCtrl">
@@ -34,6 +34,6 @@
   <input name="q" placeholder="Send message" autofocus>
 </div>
 
-<script src="main.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
