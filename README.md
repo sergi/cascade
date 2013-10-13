@@ -1,8 +1,8 @@
 # Cascade
 
-Cascade is an IRC client writend with AngularJS and node that runs on the
+Cascade is an IRC client written in JavaScript that runs on the
 Desktop thanks to [node-webkit](https://github.com/rogerwang/node-webkit).
-Although still in a very early stage, it is being thought with extensibility in
+Although still in a VERY early stage, it is being thought with extensibility in
 mind, so that adding features on top of it should be very easy for any
 JavaScript developer. The aim is to have a client like HipChat or Campfire, but
 that uses the existing IRC infrastructure.

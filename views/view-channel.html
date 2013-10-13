@@ -7,7 +7,7 @@
           <p class="from" style="margin-top: 0;">{{line.from}}</p>
         </td>
         <td id="block2" class="messageBlock">
-          <p class="time" >{{line.time}}</p>
+          <p class="time" >{{line.time | date:'HH:mm:ss'}}</p>
           <p class="text" ng-bind-html-unsafe="line.text" style="margin-top: 0;">{{line.text}}</p></td>
       </tr>
       </tbody>

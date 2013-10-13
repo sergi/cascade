@@ -5,10 +5,9 @@
   <script type="text/javascript" src="js/util.js"></script>
   <script type="text/javascript" src="lib/angular.min.js"></script>
   <script type="text/javascript" src="lib/bindonce.js"></script>
-  <script type="text/javascript" src="lib/moment.min.js"></script>
 </head>
-<body class="cascade">
-<div class="container" ng-controller="AppController">
+<body class="cascade" ng-controller="AppController">
+<div class="container">
   <div id="channel-main">
     <div class="server"
          ng-include="'views/view-server.html'"
@@ -31,7 +30,10 @@
 </div>
 
 <div class="input-bar">
-  <input name="q" placeholder="Send message" autofocus>
+  <form ng-submit="submit()" ng-controller="InputController">
+    <input type="text" ng-model="msg" name="text"/>
+    <input type="submit" id="submit" value="Submit" />>
+  </form>
 </div>
 
 <script src="js/main.js"></script>
