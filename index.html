@@ -14,6 +14,16 @@
          ng-repeat="server in servers"
          ng-show="isFocused()"
          ng-controller="ServerCtrl">
+
+    </div>
+    <div ng-repeat="server in servers">
+      <div id="channel-pane-{{channel.name}}'"
+           class="channel-content"
+           ng-repeat="channel in server.channels"
+           ng-controller="ChanCtrl"
+           ng-include src="'views/view-channel.html'"
+           ng-show="isCurrentChannel(channel.name, channel.serverAddress)">
+      </div>
     </div>
   </div>
 
@@ -22,7 +32,7 @@
       <h3>{{server.address}}</h3>
       <ul>
         <li ng-repeat="channel in server.channels"
-            ng-click="switchToChannel(channel, server.address)">{{channel}}
+            ng-click="switchToChannel(channel.name, channel.serverAddress)">{{channel.name}}
         </li>
       </ul>
     </section>
@@ -32,7 +42,7 @@
 <div class="input-bar">
   <form ng-submit="submit()" ng-controller="InputController">
     <input type="text" ng-model="msg" name="text"/>
-    <input type="submit" id="submit" value="Submit" />>
+    <input type="submit" id="submit" value="Submit"/>
   </form>
 </div>
 
