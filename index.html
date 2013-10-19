@@ -1,5 +1,6 @@
 <html ng-app="cascade">
 <head>
+  <meta charset="utf-8">
   <title>Cascade IRC</title>
   <link rel="stylesheet" type="text/css" href="css/style.css"/>
   <script type="text/javascript" src="js/util.js"></script>
@@ -9,14 +10,12 @@
 <body class="cascade" ng-controller="AppController">
 <div class="container">
   <div id="channel-main">
-    <div class="server"
-         ng-include="'views/view-server.html'"
-         ng-repeat="server in servers"
-         ng-show="isFocused()"
-         ng-controller="ServerCtrl">
-
-    </div>
     <div ng-repeat="server in servers">
+      <div class="server"
+           ng-include="'views/view-server.html'"
+           ng-show="isFocused()"
+           ng-controller="ServerCtrl">
+      </div>
       <div id="channel-pane-{{channel.name}}'"
            class="channel-content"
            ng-repeat="channel in server.channels"
@@ -32,7 +31,7 @@
       <h3>{{server.address}}</h3>
       <ul>
         <li ng-repeat="channel in server.channels"
-            ng-click="switchToChannel(channel.name, channel.serverAddress)">{{channel.name}}
+            ng-click="switchToChannel(channel.name, channel.serverAddress)">&#9679; #{{channel.name}}
         </li>
       </ul>
     </section>

@@ -38,7 +38,8 @@ html, body {
 
 .channel-list {
   padding: 5px;
-  background-color: #353535;
+  background-color: #E0EFF1;
+  color: #517478;
   -webkit-order: -1;
 }
 
@@ -84,11 +85,17 @@ html, body {
   -webkit-flex: 0 0 12em;
 }
 
+.input-bar {
+  border-top: 1px solid #999;
+}
+
 .input-bar input {
   width: 100%;
   border: 0;
   outline: none;
   height: 25px;
+  margin-left: 5px;
+
 }
 
 .msg {
@@ -140,5 +147,9 @@ html, body {
 }
 
 .meta {
-  background-color: #c6c8c8;
+  color: #999;
+}
+
+#submit {
+  display: none;
 }
