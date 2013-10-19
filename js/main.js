@@ -5,7 +5,6 @@ var gui = require('nw.gui');
 var fs = require('fs');
 var Rx = require('Rx');
 
-gui.Window.get().showDevTools()
 gui.Window.get().menu = new gui.Menu({ type: 'menubar' });
 
 var Config = JSON.parse(fs.readFileSync('config.json', { encoding: 'utf8' }));
@@ -85,7 +84,6 @@ function ChanCtrl($scope) {
   }
 
   var serverObj = $scope.$parent.getServerByName($scope.channel.serverAddress);
-  var ircClient = serverObj.ircClient;
   var evts = serverObj.observables;
 
   Rx.Observable.merge(evts.join, evts.mode, evts.topic)
@@ -100,7 +98,7 @@ function ChanCtrl($scope) {
   var OVNames = serverObj.observables.names
     .filter(isCurrentChannel)
     .subscribe(function(n) {
-      $scope.$apply(function() {
+      $scope.$$phase || $scope.$apply(function() {
         $scope.nicks = n.nicks;
       });
     });
@@ -169,7 +167,12 @@ function AppController($scope, $compile) {
       });
 
     var OVJoin = fromIrcEvent('join').map(function(j) {
-      return { to: j[0], from: j[1], text: j[1] + ' joined the channel.', isMeta: true }
+      return {
+        to: j[0],
+        from: j[1],
+        isMeta: true,
+        text: '&rarr;&nbsp' + j[1] + ' joined the channel.'
+      };
     });
 
     var OVPart = fromIrcEvent('part').map(function(j) {
@@ -195,7 +198,7 @@ function AppController($scope, $compile) {
           serverAddress: server.address
         };
 
-        $scope.$apply(function() {
+        $scope.$$phase || $scope.$apply(function() {
           _server.channels.push(channel);
           if (!$scope.currentChannel) {
             $scope.switchToChannel(channel.name, server.address);
