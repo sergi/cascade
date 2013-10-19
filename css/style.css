@@ -138,3 +138,7 @@ html, body {
   height: 100%;
   overflow-y: auto;
 }
+
+.meta {
+  background-color: #c6c8c8;
+}
