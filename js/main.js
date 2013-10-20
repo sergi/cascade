@@ -86,7 +86,7 @@ function ChanCtrl($scope) {
   var serverObj = $scope.$parent.getServerByName($scope.channel.serverAddress);
   var evts = serverObj.observables;
 
-  Rx.Observable.merge(evts.join, evts.mode, evts.topic)
+  Rx.Observable.merge(evts.join, evts.part, evts.mode, evts.topic)
     .filter(isCurrentChannel)
     .subscribe(msg);
 
@@ -105,7 +105,14 @@ function ChanCtrl($scope) {
 }
 
 function AppController($scope, $compile) {
+  // We will store and update all the server metadata in this array.
   $scope.servers = [];
+
+  /**
+   * Find server meta object by name (dns address).
+   * @param name
+   * @returns Object
+   */
   $scope.getServerByName = function(name) {
     var servers = $scope.servers;
     for (var i = 0; i < servers.length; i++) {
@@ -114,6 +121,8 @@ function AppController($scope, $compile) {
     }
   };
 
+  // Iterate through the servers in the config file definition and create a
+  // server object for each one.
   Config.servers.forEach(function(server) {
     var ircClient = new irc.Client(server.address, server.nick, {
       channels: server.channels,
@@ -124,14 +133,20 @@ function AppController($scope, $compile) {
       return Rx.Node.fromEvent(ircClient, ev);
     }
 
+    // Below we will create all the observers from IRC events.
     var usersMsgs = fromIrcEvent('message').map(function(m) {
-      return { from: m[0], to: m[1], text: m[2], time: Date.now() };
-    });
-    var ownerMsgs = fromIrcEvent('selfMessage').map(function(m) {
-      return { from: ircClient.nick, to: m[0], text: m[1], time: Date.now() };
+      return { from: m[0], to: m[1], text: m[2] };
     });
 
-    var allMsgs = Rx.Observable.merge(usersMsgs, ownerMsgs);
+    var ownerMsgs = fromIrcEvent('selfMessage').map(function(m) {
+      return { from: ircClient.nick, to: m[0], text: m[1] };
+    });
+
+    var allMsgs = Rx.Observable.merge(usersMsgs, ownerMsgs).map(function(obj) {
+      obj.time = Date.now();
+      return obj;
+    });
+
     var OVTopic = fromIrcEvent('topic').map(function(t) {
       return {
         to: t[0],
@@ -177,8 +192,10 @@ function AppController($scope, $compile) {
 
     var OVPart = fromIrcEvent('part').map(function(j) {
       return {
-        to: j[0], from: j[1], text: j[0] + ' left the channel' +
-          (j[2] ? ' (' + j[2] + ').' : '') + '.', isMeta: true
+        to: j[0],
+        from: j[1],
+        text: j[0] + ' left the channel' + (j[2] ? ' (' + j[2] + ').' : '') + '.',
+        isMeta: true
       }
     });
 
@@ -222,9 +239,6 @@ function AppController($scope, $compile) {
 
     $scope.servers.push(_server);
   });
-
-  $scope.currentServer = null;
-  $scope.currentChannel = null;
 
   $scope.switchToChannel = function(name, server) {
     $scope.currentServer = server;
