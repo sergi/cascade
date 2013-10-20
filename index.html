@@ -31,7 +31,8 @@
       <h3>{{server.address}}</h3>
       <ul>
         <li ng-repeat="channel in server.channels"
-            ng-click="switchToChannel(channel.name, channel.serverAddress)">&#9679; #{{channel.name}}
+            ng-click="switchToChannel(channel.name, channel.serverAddress)"
+            class="item">&#9679; #{{channel.name}}
         </li>
       </ul>
     </section>

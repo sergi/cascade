@@ -43,9 +43,11 @@ html, body {
   -webkit-order: -1;
 }
 
+.channel-list h3 {
+  cursor: pointer;
+}
+
 .channel-list .item {
-  color: #c6c8c8;
-  font-size: 14px;
   display: block;
   text-decoration: none;
   margin: 0;
@@ -54,6 +56,7 @@ html, body {
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .channel-list .item:active {
