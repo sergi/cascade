@@ -61,6 +61,7 @@ function ChanCtrl($scope) {
 
   function msg(obj) {
     $scope.logs.push(obj);
+    $scope.$$phase || $scope.$apply();
   }
 
   function isCurrentChannel(obj) {
