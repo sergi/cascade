@@ -163,8 +163,8 @@ function AppController($scope, $compile) {
 
     var OVMode = fromIrcEvent('+mode')
       .map(function(m) {
-          m.unshift('+');
-          return m;
+        m.unshift('+');
+        return m;
       })
       .merge(fromIrcEvent('-mode')
         .map(function(m) {
@@ -238,7 +238,8 @@ function AppController($scope, $compile) {
         mode: OVMode,
         join: OVJoin,
         part: OVPart,
-        names: OVNames
+        names: OVNames,
+        quit: OVQuit
       }
     };
 
@@ -264,16 +265,33 @@ function AppController($scope, $compile) {
 }
 
 function InputController($scope) {
+  var re = /^\/(\w+)\s(.+)/;
   $scope.msg = "";
-  $scope.submit = function() {
-    var server = $scope.servers.filter(function(s) {
+
+  function getServer() {
+    return $scope.servers.filter(function(s) {
       return s.address === $scope.currentServer;
     })[0];
-
+  }
+  document.getElementById('submitForm').addEventListener('submit', function(e) {
+    var server = getServer();
     if (!server) return;
+    var client = server.ircClient;
 
-    server.ircClient.say('#' + $scope.currentChannel, $scope.msg);
-  };
+    var isCommand = $scope.msg.search(re) !== -1;
+    if (!isCommand) {
+      client.say('#' + $scope.currentChannel, $scope.msg);
+    } else {
+      var cmd = $scope.msg.match(re)[1].toLowerCase();
+      var args = $scope.msg.match(re)[2];
+      switch (cmd) {
+        case 'join':
+          client.join(args);
+          break;
+      }
+    }
+    $scope.msg = '';
+  });
 }
 
 angular.module('cascade', ['pasvaz.bindonce'])
