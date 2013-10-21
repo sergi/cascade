@@ -189,7 +189,8 @@ function AppController($scope, $compile) {
         to: j[0],
         from: j[1],
         isMeta: true,
-        text: '&rarr;&nbsp' + j[1] + ' joined the channel.'
+        text: '<span class="join-arrow">&rarr;</span>&nbsp;' + j[1] +
+          ' joined the channel'
       };
     });
 
@@ -197,7 +198,8 @@ function AppController($scope, $compile) {
       return {
         to: j[0],
         from: j[1],
-        text: j[0] + ' left the channel' + (j[2] ? ' (' + j[2] + ').' : '') + '.',
+        text: '<span class="part-arrow">&larr;</span>&nbsp;' + j[1] +
+          ' left the channel' + (j[2] ? ' (' + j[2] + ').' : ''),
         isMeta: true
       }
     });

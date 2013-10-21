@@ -37,31 +37,31 @@ html, body {
 }
 
 .channel-list {
-  padding: 5px;
-  background-color: #E0EFF1;
+  background-color: #e0eff1;
   color: #517478;
   -webkit-order: -1;
 }
 
 .channel-list h3 {
   cursor: pointer;
+  padding-left: 5px;
 }
 
 .channel-list .item {
   display: block;
   text-decoration: none;
   margin: 0;
-  width: 100%;
   line-height: 150%;
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: pointer;
+  padding-left: 10px;
 }
 
-.channel-list .item:active {
-  color: #000;
-  background-color: #999;
+.channel-list .item:active, .channel-list .selected {
+  color: #e0eff1;
+  background-color: #517478;
 }
 
 .channel-content {
@@ -84,8 +84,12 @@ html, body {
   float: right;
 }
 
-.user-list, .channel-list {
+.channel-list {
   -webkit-flex: 0 0 12em;
+}
+
+.user-list {
+  -webkit-flex: 0 0 10em;
 }
 
 .input-bar {
@@ -98,7 +102,6 @@ html, body {
   outline: none;
   height: 25px;
   margin-left: 5px;
-
 }
 
 .msg {
@@ -117,11 +120,17 @@ html, body {
   font-size: 12px;
 }
 
+.from {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .msg td {
   padding: 3px;
 }
 
 .msg .nameBlock {
+  min-width: 110px;
   width: 110px;
   background-color: #f7f7f7;
   /*border-top: 1px solid #fff;*/
@@ -156,3 +165,7 @@ html, body {
 #submit {
   display: none;
 }
+
+.join-arrow { font-weight: bold; color: forestgreen; }
+
+.part-arrow { font-weight: bold; color: firebrick; }

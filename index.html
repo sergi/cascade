@@ -32,6 +32,7 @@
       <ul>
         <li ng-repeat="channel in server.channels"
             ng-click="switchToChannel(channel.name, channel.serverAddress)"
+            ng-class="{selected: channel.name == currentChannel}"
             class="item">&#9679; #{{channel.name}}
         </li>
       </ul>
