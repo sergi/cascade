@@ -130,22 +130,25 @@ function AppController($scope, $compile) {
     });
 
     function fromIrcEvent(ev) {
-      return Rx.Node.fromEvent(ircClient, ev);
+      return Rx.Node.fromEvent(ircClient, ev)
+        .timestamp()
+        .map(function(obj) {
+          var arr = Array.prototype.slice.call(obj.value);
+          arr.__timestamp = obj.timestamp;
+          return arr;
+        });
     }
 
     // Below we will create all the observers from IRC events.
     var usersMsgs = fromIrcEvent('message').map(function(m) {
-      return { from: m[0], to: m[1], text: m[2] };
+      return { from: m[0], to: m[1], text: m[2], time: m.__timestamp};
     });
 
     var ownerMsgs = fromIrcEvent('selfMessage').map(function(m) {
-      return { from: ircClient.nick, to: m[0], text: m[1] };
+      return { from: ircClient.nick, to: m[0], text: m[1], time: m.__timestamp};
     });
 
-    var allMsgs = Rx.Observable.merge(usersMsgs, ownerMsgs).map(function(obj) {
-      obj.time = Date.now();
-      return obj;
-    });
+    var allMsgs = usersMsgs.merge(ownerMsgs);
 
     var OVTopic = fromIrcEvent('topic').map(function(t) {
       return {
@@ -157,18 +160,17 @@ function AppController($scope, $compile) {
       };
     });
 
-    var OVMode = Rx.Observable.merge(
-        fromIrcEvent('+mode').map(function(m) {
-          m = Array.prototype.slice.call(m);
+    var OVMode = fromIrcEvent('+mode')
+      .map(function(m) {
           m.unshift('+');
           return m;
-        }),
-        fromIrcEvent('-mode').map(function(m) {
-          m = Array.prototype.slice.call(m);
+      })
+      .merge(fromIrcEvent('-mode')
+        .map(function(m) {
           m.unshift('-');
           return m;
-        })
-      ).map(function(m) {
+        }))
+      .map(function(m) {
         var obj = {
           action: m[0],
           from: m[2] || server.address,
