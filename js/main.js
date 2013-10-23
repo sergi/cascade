@@ -69,18 +69,13 @@ function ChanCtrl($scope) {
   }
 
   function markNickMentions(obj) {
-    function markMentions(text) {
-      var users = Object.keys($scope.nicks);
-      for (var i = 0; i < users.length; i++) {
-        var re = new RegExp('(\\b' + escapeRegExp(users[i]) + '\\b)');
-        if (text.search(re) !== -1) {
-          text = text.replace(re, '<span class="mention">$1</span>');
-        }
+    var boundaries = obj.text.split(/\b/);
+    obj.text = boundaries.map(function(b) {
+      if (typeof($scope.nicks[b]) !== 'undefined') {
+        return '<span class="mention">' + b + '</span>';
       }
-      return text;
-    }
-
-    obj.text = markMentions(obj.text);
+      return b;
+    }).join('');
     return obj;
   }
 
@@ -258,14 +253,14 @@ function AppController($scope, $compile) {
     }
   };
 
-  $scope.isCurrentChannel = function(channelName, server) {
+  $scope.isCurrentChannel = function(name, server) {
     return $scope.currentServer === server &&
-      $scope.currentChannel === cleanName(channelName);
+      $scope.currentChannel === cleanName(name);
   };
 }
 
 function InputController($scope) {
-  var re = /^\/(\w+)\s(.+)/;
+  var re = /^\/(\w+)\s*(.+)/;
   $scope.msg = "";
 
   function getServer() {
@@ -273,6 +268,7 @@ function InputController($scope) {
       return s.address === $scope.currentServer;
     })[0];
   }
+
   document.getElementById('submitForm').addEventListener('submit', function(e) {
     var server = getServer();
     if (!server) return;
@@ -287,6 +283,12 @@ function InputController($scope) {
       switch (cmd) {
         case 'join':
           client.join(args);
+          break;
+        case 'part':
+          if (!args || args.trim() === "")
+            client.part('#' + $scope.currentChannel);
+          else
+            client.part(args);
           break;
       }
     }

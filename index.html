@@ -11,7 +11,7 @@
 <div class="container">
   <div id="channel-main">
     <div ng-repeat="server in servers">
-      <div class="server"
+      <div class="server-window"
            ng-include="'views/view-server.html'"
            ng-show="isFocused()"
            ng-controller="ServerCtrl">
@@ -26,7 +26,7 @@
     </div>
   </div>
 
-  <div class="channel-list">
+  <div id="channel-list">
     <section ng-repeat="server in servers">
       <h3>{{server.address}}</h3>
       <ul>
