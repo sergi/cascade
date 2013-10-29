@@ -1,14 +1,13 @@
-<div class="msg-container">
-  <div class="msg" bindonce ng-repeat="line in logs">
+<div class="line-container">
+  <div class="line" bindonce ng-repeat="line in logs">
     <table width="100%" cellspacing="0" cellpadding="0">
       <tbody>
       <tr ng-class="{meta: line.isMeta}">
-        <td class="nameBlock" ng-hide="line.isMeta">
+        <td class="nick" ng-hide="line.isMeta">
           <p class="from" style="margin-top: 0;">{{line.from}}</p>
         </td>
-        <td id="block2" class="messageBlock">
+        <td class="message">
           <p class="time">{{line.time | date:'HH:mm:ss'}}</p>
-
           <p class="text" ng-bind-html-unsafe="line.text" style="margin-top: 0;">{{line.text}}</p></td>
       </tr>
       </tbody>

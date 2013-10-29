@@ -13,7 +13,7 @@
     <div ng-repeat="server in servers">
       <div class="server-window"
            ng-include="'views/view-server.html'"
-           ng-show="isFocused()"
+           ng-show="isServerSelected(server.address)"
            ng-controller="ServerCtrl">
       </div>
       <div id="channel-pane-{{channel.name}}'"
@@ -28,7 +28,9 @@
 
   <div id="channel-list">
     <section ng-repeat="server in servers">
-      <h3>{{server.address}}</h3>
+      <h3 ng-click="switchToServer(server.address)"
+          ng-class="{selected: isCurrentServer(server.address)}">
+          {{server.address}}</h3>
       <ul>
         <li ng-repeat="channel in server.channels"
             ng-click="switchToChannel(channel.name, channel.serverAddress)"
@@ -47,6 +49,14 @@
   </form>
 </div>
 
-<script src="js/main.js"></script>
+<script src="js/init.js"></script>
+<script src="js/app.js"></script>
+<script src="js/server.js"></script>
+<script src="js/channel.js"></script>
+<script src="js/input.js"></script>
+<!--<script src="js/main.js"></script>-->
+<script>
+  angular.module('cascade', ['pasvaz.bindonce'])
+</script>
 </body>
 </html>

@@ -5,9 +5,13 @@ var gui = require('nw.gui');
 var fs = require('fs');
 var Rx = require('Rx');
 
-gui.Window.get().menu = new gui.Menu({ type: 'menubar' });
+gui.Window.get().menu = new gui.Menu({
+  type: 'menubar'
+});
 
-var Config = JSON.parse(fs.readFileSync('config.json', { encoding: 'utf8' }));
+var Config = JSON.parse(fs.readFileSync('config.json', {
+  encoding: 'utf8'
+}));
 
 function cleanName(name) {
   if (name[0] === '#')
@@ -24,25 +28,23 @@ function ServerCtrl($scope) {
   $scope.logs = [];
 
   function msg(obj) {
-    obj.time = Date.now();
     $scope.logs.push(obj);
+    $scope.$$phase || $scope.$apply();
   }
 
-  var ircClient = $scope.$parent.server.ircClient;
+  var server = $scope.$parent.server;
+  var ircClient = server.ircClient;
 
-  ircClient.on('motd', function(motd) {
-    motd = motd.split(/\n\r?/);
-    motd.forEach(function(line) {
-      msg({ text: line });
-    });
-  });
+  var OVMotd = server.observables.motd.subscribe(msg);
 
   ircClient.on('raw', function(message) {
     switch (message.rawCommand) {
       case ('001'):
       case ('002'):
       case ('003'):
-        msg({ text: message.args[1] });
+        msg({
+          text: message.args[1]
+        });
         break;
     }
   });
@@ -122,14 +124,20 @@ function AppController($scope, $compile) {
   Config.servers.forEach(function(server) {
     var ircClient = new irc.Client(server.address, server.nick, {
       channels: server.channels,
-      autoConnect: false
+      autoConnect: false,
+      showErrors: true
     });
 
     function fromIrcEvent(ev) {
       return Rx.Node.fromEvent(ircClient, ev)
         .timestamp()
         .map(function(obj) {
-          var arr = Array.prototype.slice.call(obj.value);
+          var arr;
+          if (typeof obj.value === 'string')
+            arr = [obj.value];
+          else
+            arr = Array.prototype.slice.call(obj.value);
+
           arr.__timestamp = obj.timestamp;
           return arr;
         });
@@ -137,14 +145,33 @@ function AppController($scope, $compile) {
 
     // Below we will create all the observers from IRC events.
     var usersMsgs = fromIrcEvent('message').map(function(m) {
-      return { from: m[0], to: m[1], text: m[2], time: m.__timestamp};
+      return {
+        from: m[0],
+        to: m[1],
+        text: m[2],
+        time: m.__timestamp
+      };
     });
 
     var ownerMsgs = fromIrcEvent('selfMessage').map(function(m) {
-      return { from: ircClient.nick, to: m[0], text: m[1], time: m.__timestamp};
+      return {
+        from: ircClient.nick,
+        to: m[0],
+        text: m[1],
+        time: m.__timestamp
+      };
     });
 
     var allMsgs = usersMsgs.merge(ownerMsgs);
+
+    var OVMotd = fromIrcEvent('motd').selectMany(function(motd) {
+      return Rx.Observable.fromArray(motd[0].split(/\n\r?/));
+    }).map(function(m) {
+        return {
+          text: m,
+          motd: true
+        };
+      });
 
     var OVTopic = fromIrcEvent('topic').map(function(t) {
       return {
@@ -160,8 +187,7 @@ function AppController($scope, $compile) {
       .map(function(m) {
         m.unshift('+');
         return m;
-      })
-      .merge(fromIrcEvent('-mode')
+      }).merge(fromIrcEvent('-mode')
         .map(function(m) {
           m.unshift('-');
           return m;
@@ -175,7 +201,7 @@ function AppController($scope, $compile) {
           user: m[4],
           isMeta: true
         };
-        obj.text = obj.from + ' sets mode ' + obj.action + obj.mode + ' ' + ( obj.user || '');
+        obj.text = obj.from + ' sets mode ' + obj.action + obj.mode + ' ' + (obj.user || '');
         return obj;
       });
 
@@ -184,8 +210,7 @@ function AppController($scope, $compile) {
         to: j[0],
         from: j[1],
         isMeta: true,
-        text: '<span class="join-arrow">&rarr;</span>&nbsp;' + j[1] +
-          ' joined the channel'
+        text: '<span class="join-arrow">&rarr;</span>&nbsp;' + j[1] + ' joined the channel'
       };
     });
 
@@ -193,27 +218,34 @@ function AppController($scope, $compile) {
       return {
         to: j[0],
         from: j[1],
-        text: '<span class="part-arrow">&larr;</span>&nbsp;' + j[1] +
-          ' left the channel' + (j[2] ? ' (' + j[2] + ').' : ''),
+        text: '<span class="part-arrow">&larr;</span>&nbsp;' + j[1] + ' left the channel' + (j[2] ? ' (' + j[2] + ').' : ''),
         isMeta: true
       }
     });
 
     var OVNames = fromIrcEvent('names').map(function(n) {
-      return { to: n[0], nicks: n[1] };
+      return {
+        to: n[0],
+        nicks: n[1]
+      };
     });
 
     var OVQuit = fromIrcEvent('quit').map(function(n) {
-      return { to: n[0], nicks: n[1] };
+      return {
+        to: n[0],
+        nicks: n[1]
+      };
     });
 
     var OVAddChannel = OVJoin.filter(function(j) {
+      console.log(j)
       return j.from === ircClient.nick;
     }).subscribe(function(j) {
         var channel = {
           name: cleanName(j.to),
           serverAddress: server.address
         };
+        console.log(channel)
 
         $scope.$$phase || $scope.$apply(function() {
           _server.channels.push(channel);
@@ -234,6 +266,7 @@ function AppController($scope, $compile) {
         join: OVJoin,
         part: OVPart,
         names: OVNames,
+        motd: OVMotd,
         quit: OVQuit
       }
     };
@@ -253,9 +286,18 @@ function AppController($scope, $compile) {
     }
   };
 
+  $scope.switchToServer = function(address) {
+    $scope.currentServer = address;
+    $scope.currentChannel = '';
+  };
+
   $scope.isCurrentChannel = function(name, server) {
     return $scope.currentServer === server &&
       $scope.currentChannel === cleanName(name);
+  };
+
+  $scope.isServerSelected = function(serverName) {
+    return $scope.currentServer == serverName && !$scope.currentChannel;
   };
 }
 
@@ -297,4 +339,3 @@ function InputController($scope) {
 }
 
 angular.module('cascade', ['pasvaz.bindonce'])
-

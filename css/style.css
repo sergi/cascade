@@ -1,12 +1,7 @@
-@font-face {
-  font-family: Ubuntu;
-  src: url('FiraSans-Regular.ttf');
-}
-
 * { margin: 0; padding: 0; }
 
 html, body {
-  font-family: 'Ubuntu';
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 12px;
   overflow: hidden;
   width: 100%;
@@ -43,12 +38,12 @@ html, body {
   -webkit-order: -1;
 }
 
-#channel-list h3 {
+#channel-list .server-name {
   cursor: pointer;
   padding-left: 5px;
 }
 
-#channel-list .item {
+#channel-list .channel-name {
   display: block;
   text-decoration: none;
   margin: 0;
@@ -60,7 +55,8 @@ html, body {
   padding-left: 10px;
 }
 
-#channel-list .item:active, #channel-list .selected {
+#channel-list .channel-name:active,
+#channel-list .selected {
   color: #e0eff1;
   background-color: #517478;
 }
@@ -101,32 +97,24 @@ html, body {
   margin-left: 5px;
 }
 
-.msg {
+.line {
   border-bottom: 1px solid #eee;
   line-height: 150%;
   display: block;
-  font-size: 12px;
 }
 
-.msg .time {
+.message .time {
   color: #ddd;
   float: right;
-}
-
-.msg .text, .msg .time, .msg .from {
   font-size: 12px;
 }
 
-.from {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.msg td {
+.line td {
   padding: 3px;
 }
 
-.msg .nameBlock {
+.line .nick {
+  font-size: 12px;
   min-width: 110px;
   width: 110px;
   background-color: #f7f7f7;
@@ -137,11 +125,16 @@ html, body {
   text-align: right;
 }
 
+.line .nick .from {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .channel-content p {
   margin: 0 10px;
 }
 
-.msg-container {
+.line-container {
   -webkit-flex: 1;
   overflow-y: auto;
 }
@@ -166,4 +159,13 @@ html, body {
 
 .mention {
   font-weight: bold;
+}
+
+.text.motd {
+  color: #999;
+  font-family: Monospace;
+}
+
+.text {
+  font-size: 12px;
 }
