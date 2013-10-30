@@ -1,7 +1,7 @@
 * { margin: 0; padding: 0; }
 
 html, body {
-  font-family: Helvetica, Arial, sans-serif;
+  font-family: 'Lucida Grande', Helvetica, Arial, sans-serif;
   font-size: 12px;
   overflow: hidden;
   width: 100%;
@@ -162,10 +162,26 @@ html, body {
 }
 
 .text.motd {
-  color: #999;
-  font-family: Monospace;
+  color: #666;
+  font-family: Monaco, Consolas, "Lucida Console", monospace;
 }
 
 .text {
   font-size: 12px;
+}
+
+#channel-list h3, #channel-list li {
+  cursor: pointer;
+}
+
+.messageBlock {
+  padding-left: 5px;
+  line-height: 1.1em;
+  color: #666;
+}
+
+.msg {
+  border-bottom: 1px solid #eee;
+  padding-top: 1px;
+  padding-bottom: 1px;
 }
