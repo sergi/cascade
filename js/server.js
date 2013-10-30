@@ -16,17 +16,8 @@ function ServerCtrl($scope) {
     .map(markURL)
     .subscribe(msg);
 
-  ircClient.on('raw', function(message) {
-    switch (message.rawCommand) {
-      case ('001'):
-      case ('002'):
-      case ('003'):
-        msg({
-          text: message.args[1]
-        });
-        break;
-    }
-  });
+  var OVRaw = server.observables.raw
+    .subscribe(msg);
 
   ircClient.on('error', function(message) {
     console.log('ERROR', message);

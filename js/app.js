@@ -28,16 +28,16 @@ function AppController($scope, $compile) {
       return Rx.Node.fromEvent(ircClient, ev)
         .timestamp()
         .map(function(obj) {
-        var arr;
-        if (typeof obj.value === 'string')
-          arr = [obj.value];
-        else
-          arr = Array.prototype.slice.call(obj.value);
+          var arr;
+          if (typeof obj.value === 'string')
+            arr = [obj.value];
+          else
+            arr = Array.prototype.slice.call(obj.value);
 
-        arr.__timestamp = obj.timestamp;
-        arr.__type = ev;
-        return arr;
-      });
+          arr.__timestamp = obj.timestamp;
+          arr.__type = ev;
+          return arr;
+        });
     }
 
     // Below we will create all the observers from IRC events.
@@ -64,11 +64,11 @@ function AppController($scope, $compile) {
     var OVMotd = fromIrcEvent('motd').selectMany(function(motd) {
       return Rx.Observable.fromArray(motd[0].split(/\n\r?/));
     }).map(function(m) {
-      return {
-        text: m,
-        motd: true
-      };
-    });
+        return {
+          text: m,
+          motd: true
+        };
+      });
 
     var OVTopic = fromIrcEvent('topic').map(function(t) {
       return {
@@ -83,17 +83,17 @@ function AppController($scope, $compile) {
     var OVMode = fromIrcEvent('+mode')
       .merge(fromIrcEvent('-mode'))
       .map(function(m) {
-      var obj = {
-        action: m.__type[0], // First char ('+' or '-')
-        from: m[1] || server.address,
-        to: m[0],
-        mode: m[2],
-        user: m[3],
-        isMeta: true
-      };
-      obj.text = obj.from + ' sets mode ' + obj.action + obj.mode + ' ' + (obj.user || '');
-      return obj;
-    });
+        var obj = {
+          action: m.__type[0], // First char ('+' or '-')
+          from: m[1] || server.address,
+          to: m[0],
+          mode: m[2],
+          user: m[3],
+          isMeta: true
+        };
+        obj.text = obj.from + ' sets mode ' + obj.action + obj.mode + ' ' + (obj.user || '');
+        return obj;
+      });
 
     var OVJoin = fromIrcEvent('join').map(function(j) {
       return {
@@ -130,21 +130,31 @@ function AppController($scope, $compile) {
       };
     });
 
+    var codes = ['001', '002', '003', '004', '251', '252', '253', '254', '255',
+      '265', '266', 'NOTICE'];
+
+    var OVRaw = fromIrcEvent('raw').filter(function(r) {
+      return codes.indexOf(r[0].rawCommand) > -1;
+    }).map(function(r) {
+        r[0].args.shift();
+        return { text: r[0].args.join(' ') };
+      });
+
     var OVAddChannel = OVJoin.filter(function(j) {
       return j.from === ircClient.nick;
     }).subscribe(function(j) {
-      var channel = {
-        name: cleanName(j.to),
-        serverAddress: server.address
-      };
+        var channel = {
+          name: cleanName(j.to),
+          serverAddress: server.address
+        };
 
-      $scope.$$phase || $scope.$apply(function() {
-        _server.channels.push(channel);
-        if (!$scope.currentChannel) {
-          $scope.switchToChannel(channel.name, server.address);
-        }
+        $scope.$$phase || $scope.$apply(function() {
+          _server.channels.push(channel);
+          if (!$scope.currentChannel) {
+            $scope.switchToChannel(channel.name, server.address);
+          }
+        });
       });
-    });
 
     var _server = {
       address: server.address,
@@ -158,7 +168,8 @@ function AppController($scope, $compile) {
         part: OVPart,
         names: OVNames,
         motd: OVMotd,
-        quit: OVQuit
+        quit: OVQuit,
+        raw: OVRaw
       }
     };
 
