@@ -16,18 +16,19 @@ function InputController($scope) {
 
     var isCommand = $scope.msg.search(re) !== -1;
     if (!isCommand) {
-      client.say('#' + $scope.currentChannel, $scope.msg);
+
+      client.say($scope.currentChannel, $scope.msg);
     } else {
       var cmd = $scope.msg.match(re)[1].toLowerCase();
       var args = $scope.msg.match(re)[2];
-    console.log(cmd, args)
+
       switch (cmd) {
         case 'join':
           client.join(args);
           break;
         case 'part':
           if (!args || args.trim() === "")
-            client.part('#' + $scope.currentChannel);
+            client.part($scope.currentChannel);
           else
             client.part(args);
           break;

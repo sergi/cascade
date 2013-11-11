@@ -16,12 +16,13 @@
            ng-show="isServerSelected(server.address)"
            ng-controller="ServerCtrl">
       </div>
-      <div id="channel-pane-{{channel.name}}'"
+      <div id="channel-pane-{{channel.name}}"
            class="channel-content"
            ng-repeat="channel in server.channels"
            ng-controller="ChanCtrl"
            ng-include src="'views/view-channel.html'"
-           ng-show="isCurrentChannel(channel.name, channel.serverAddress)">
+           ng-show="isCurrentChannel(channel.name, channel.serverAddress)"
+           ng-class="{private: channel.privMsg }">
       </div>
     </div>
   </div>
@@ -35,7 +36,7 @@
         <li ng-repeat="channel in server.channels"
             ng-click="switchToChannel(channel.name, channel.serverAddress)"
             ng-class="{selected: channel.name == currentChannel}"
-            class="item">&#9679; #{{channel.name}}
+            class="item">&#9679; {{channel.name}}
         </li>
       </ul>
     </section>

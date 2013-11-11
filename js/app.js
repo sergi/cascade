@@ -2,19 +2,6 @@ function AppController($scope, $compile) {
   // We will store and update all the server metadata in this array.
   $scope.servers = [];
 
-  /**
-   * Find server meta object by name (dns address).
-   * @param name
-   * @returns Object
-   */
-  $scope.getServerByName = function(name) {
-    var servers = $scope.servers;
-    for (var i = 0; i < servers.length; i++) {
-      if (servers[i].address === name)
-        return servers[i];
-    }
-  };
-
   // Iterate through the servers in the config file definition and create a
   // server object for each one.
   Config.servers.forEach(function(server) {
@@ -28,26 +15,30 @@ function AppController($scope, $compile) {
       return Rx.Node.fromEvent(ircClient, ev)
         .timestamp()
         .map(function(obj) {
-          var arr;
-          if (typeof obj.value === 'string')
-            arr = [obj.value];
-          else
-            arr = Array.prototype.slice.call(obj.value);
+        var arr;
+        if (typeof obj.value === 'string')
+          arr = [obj.value];
+        else
+          arr = Array.prototype.slice.call(obj.value);
 
-          arr.__timestamp = obj.timestamp;
-          arr.__type = ev;
-          return arr;
-        });
+        arr.__timestamp = obj.timestamp;
+        arr.__type = ev;
+        return arr;
+      });
     }
 
-    // Below we will create all the observers from IRC events.
-    var usersMsgs = fromIrcEvent('message').map(function(m) {
+    var _userMsgs = fromIrcEvent('message').map(function(m) {
       return {
         from: m[0],
         to: m[1],
         text: m[2],
         time: m.__timestamp
       };
+    });
+
+    // Below we will create all the observers from IRC events.
+    var usersMsgs = _userMsgs.filter(function(m) {
+      return m.to !== ircClient.nick;
     });
 
     var ownerMsgs = fromIrcEvent('selfMessage').map(function(m) {
@@ -64,11 +55,11 @@ function AppController($scope, $compile) {
     var OVMotd = fromIrcEvent('motd').selectMany(function(motd) {
       return Rx.Observable.fromArray(motd[0].split(/\n\r?/));
     }).map(function(m) {
-        return {
-          text: m,
-          motd: true
-        };
-      });
+      return {
+        text: m,
+        motd: true
+      };
+    });
 
     var OVTopic = fromIrcEvent('topic').map(function(t) {
       return {
@@ -83,17 +74,18 @@ function AppController($scope, $compile) {
     var OVMode = fromIrcEvent('+mode')
       .merge(fromIrcEvent('-mode'))
       .map(function(m) {
-        var obj = {
-          action: m.__type[0], // First char ('+' or '-')
-          from: m[1] || server.address,
-          to: m[0],
-          mode: m[2],
-          user: m[3],
-          isMeta: true
-        };
-        obj.text = obj.from + ' sets mode ' + obj.action + obj.mode + ' ' + (obj.user || '');
-        return obj;
-      });
+      var obj = {
+        action: m.__type[0], // First char ('+' or '-')
+        from: m[1] || server.address,
+        to: m[0],
+        mode: m[2],
+        user: m[3],
+        isMeta: true
+      };
+      obj.text = obj.from + ' sets mode ' + obj.action + obj.mode + ' ' +
+        (obj.user || '');
+      return obj;
+    });
 
     var OVJoin = fromIrcEvent('join').map(function(j) {
       return {
@@ -131,30 +123,69 @@ function AppController($scope, $compile) {
     });
 
     var codes = ['001', '002', '003', '004', '251', '252', '253', '254', '255',
-      '265', '266', 'NOTICE'];
+        '265', '266', 'NOTICE'
+    ];
 
     var OVRaw = fromIrcEvent('raw').filter(function(r) {
       return codes.indexOf(r[0].rawCommand) > -1;
     }).map(function(r) {
-        r[0].args.shift();
-        return { text: r[0].args.join(' ') };
-      });
+      r[0].args.shift();
+      return {
+        text: r[0].args.join(' ')
+      };
+    });
 
+    /**
+     * Observable for all private messages for which a channel has been created
+     * so that we don't have to create a channel first.
+     */
+    var privMsgs = _userMsgs.filter(function(m) {
+      return m.to === ircClient.nick && _server.channels.some(function(c) {
+        return c.name === m.from;
+      });
+    });
+
+    /**
+     * Observable for private messages that don't have a channel created yet.
+     * We will create a channel with the first message buffered in first.
+     */
+    var OVPrivMsgNoChannel = _userMsgs.filter(function(m) {
+      return m.to === ircClient.nick && _server.channels.every(function(c) {
+        return c.name !== m.from;
+      });
+    }).subscribe(function createNewChannel(j) {
+      var channel = {
+        name: j.from,
+        serverAddress: server.address,
+        privMsg: true,
+        logs: [j]
+      };
+
+      _server.channels.push(channel);
+      $scope.switchToChannel(channel.name, server.address);
+      $scope.$$phase || $scope.$apply();
+    });
+
+    /**
+     * Observable to all the join events in which the user is the one joining.
+     * It opens a channelin that case and switches to it if there is no channel
+     * selected yet.
+     */
     var OVAddChannel = OVJoin.filter(function(j) {
       return j.from === ircClient.nick;
     }).subscribe(function(j) {
-        var channel = {
-          name: cleanName(j.to),
-          serverAddress: server.address
-        };
+      var channel = {
+        name: j.to,
+        serverAddress: server.address
+      };
 
-        $scope.$$phase || $scope.$apply(function() {
-          _server.channels.push(channel);
-          if (!$scope.currentChannel) {
-            $scope.switchToChannel(channel.name, server.address);
-          }
-        });
+      $scope.$$phase || $scope.$apply(function() {
+        _server.channels.push(channel);
+        if (!$scope.currentChannel) {
+          $scope.switchToChannel(channel.name, server.address);
+        }
       });
+    });
 
     var _server = {
       address: server.address,
@@ -162,6 +193,7 @@ function AppController($scope, $compile) {
       channels: [],
       observables: {
         allMsgs: allMsgs,
+        privMsgs: privMsgs,
         topic: OVTopic,
         mode: OVMode,
         join: OVJoin,
@@ -176,10 +208,23 @@ function AppController($scope, $compile) {
     $scope.servers.push(_server);
   });
 
+  /**
+   * Find server meta object by name (dns address).
+   * @param name
+   * @returns Object
+   */
+  $scope.getServerByName = function(name) {
+    var servers = $scope.servers;
+    for (var i = 0; i < servers.length; i++) {
+      if (servers[i].address === name)
+        return servers[i];
+    }
+  };
+
   $scope.switchToChannel = function(name, server) {
     $scope.currentServer = server;
-    $scope.currentChannel = cleanName(name);
-    document.title = 'Cascade IRC - #' + $scope.currentChannel;
+    $scope.currentChannel = name;
+    document.title = 'Cascade IRC - ' + $scope.currentChannel;
     var el = getChannelEl(name);
     if (el) {
       setTimeout(function() {
@@ -195,7 +240,7 @@ function AppController($scope, $compile) {
 
   $scope.isCurrentChannel = function(name, server) {
     return $scope.currentServer === server &&
-      $scope.currentChannel === cleanName(name);
+      $scope.currentChannel === name;
   };
 
   $scope.isServerSelected = function(serverName) {

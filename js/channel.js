@@ -1,7 +1,9 @@
 function ChanCtrl($scope) {
-  $scope.logs = [];
+  $scope.logs = $scope.channel.logs || [];
   $scope.nicks = [];
   $scope.topic = '';
+
+  var serverObj = $scope.$parent.getServerByName($scope.channel.serverAddress);
 
   function msg(obj) {
     $scope.logs.push(obj);
@@ -9,7 +11,8 @@ function ChanCtrl($scope) {
   }
 
   function isCurrentChannel(obj) {
-    return cleanName(obj.to) === $scope.channel.name;
+    return (obj.to === $scope.channel.name) ||
+      (obj.from === $scope.channel.name && obj.to === serverObj.ircClient.nick);
   }
 
   function markNickMentions(obj) {
@@ -23,9 +26,25 @@ function ChanCtrl($scope) {
     return obj;
   }
 
-  var serverObj = $scope.$parent.getServerByName($scope.channel.serverAddress);
-  var evts = serverObj.observables;
+  $scope.msgUser = function msgUser(user) {
+    var alreadyOpen = serverObj.channels.some(function(c) {
+      return c.name === user;
+    });
 
+    if (alreadyOpen)
+      return;
+
+    var channel = {
+      name: user,
+      serverAddress: $scope.channel.serverAddress,
+      privMsg: true
+    };
+
+    serverObj.channels.push(channel);
+    $scope.switchToChannel(channel.name, $scope.channel.serverAddress);
+  };
+
+  var evts = serverObj.observables;
   Rx.Observable.merge(evts.join, evts.part, evts.mode, evts.topic)
     .filter(isCurrentChannel)
     .map(markURL)
@@ -34,6 +53,11 @@ function ChanCtrl($scope) {
   var OVChannelMsgs = serverObj.observables.allMsgs
     .filter(isCurrentChannel)
     .map(markNickMentions)
+    .map(markURL)
+    .subscribe(msg);
+
+  var OVPrivateMsgs = serverObj.observables.privMsgs
+    .filter(isCurrentChannel)
     .map(markURL)
     .subscribe(msg);
 
