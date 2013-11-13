@@ -11,6 +11,12 @@ function AppController($scope, $compile) {
       showErrors: true
     });
 
+    function getChannelByName(name) {
+      for (var i = 0; i < _server.channels.length; i++)
+        if (_server.channels[i].name === name)
+          return _server.channels[i];
+    }
+
     function fromIrcEvent(ev) {
       return Rx.Node.fromEvent(ircClient, ev)
         .timestamp()
@@ -34,6 +40,19 @@ function AppController($scope, $compile) {
         text: m[2],
         time: m.__timestamp
       };
+    });
+
+    /**
+     * Increments the `unread` counter in channels that are not the current
+     * one.
+     */
+    var OVMsgCounter = _userMsgs.filter(function(m) {
+      return !$scope.isCurrentChannel(m.to);
+    }).subscribe(function(obj) {
+      var channel = getChannelByName(obj.to);
+      if (channel) {
+        channel.unread += 1;
+      }
     });
 
     // Below we will create all the observers from IRC events.
@@ -92,8 +111,7 @@ function AppController($scope, $compile) {
         to: j[0],
         from: j[1],
         isMeta: true,
-        text: '<span class="join-arrow">&rarr;</span>&nbsp;' +
-          '<span class="mention">' + j[1] + '</span> joined the channel'
+        text: '<span class="join-arrow">&rarr;</span>&nbsp;' + '<span class="mention">' + j[1] + '</span> joined the channel'
       };
     });
 
@@ -101,8 +119,7 @@ function AppController($scope, $compile) {
       return {
         to: j[0],
         from: j[1],
-        text: '<span class="part-arrow">&larr;</span>&nbsp;' +
-          '<span class="mention">' + j[1] + '</span> left the channel' +
+        text: '<span class="part-arrow">&larr;</span>&nbsp;' + '<span class="mention">' + j[1] + '</span> left the channel' +
           (j[2] ? ' (' + j[2] + ').' : ''),
         isMeta: true
       };
@@ -158,7 +175,8 @@ function AppController($scope, $compile) {
         name: j.from,
         serverAddress: server.address,
         privMsg: true,
-        logs: [j]
+        logs: [j],
+        unread: 0
       };
 
       _server.channels.push(channel);
@@ -176,7 +194,8 @@ function AppController($scope, $compile) {
     }).subscribe(function(j) {
       var channel = {
         name: j.to,
-        serverAddress: server.address
+        serverAddress: server.address,
+        unread: 0
       };
 
       $scope.$$phase || $scope.$apply(function() {
@@ -221,10 +240,29 @@ function AppController($scope, $compile) {
     }
   };
 
+  $scope.getChannelByName = function(name, serverName) {
+    var _server = $scope.getServerByName(serverName);
+    if (!_server || !_server.channels.length) return;
+
+    for (var i = 0; i < _server.channels.length; i++) {
+      if (_server.channels[i].name === name) {
+        return _server.channels[i];
+      }
+    }
+  };
+
   $scope.switchToChannel = function(name, server) {
     $scope.currentServer = server;
     $scope.currentChannel = name;
     document.title = 'Cascade IRC - ' + $scope.currentChannel;
+
+    // Set number of unread messages to 0
+    var channelObj = $scope.getChannelByName(name, server);
+    if (channelObj) {
+      channelObj.unread = 0;
+    }
+
+    // Scroll to the bottom of the screen
     var el = getChannelEl(name);
     if (el) {
       setTimeout(function() {

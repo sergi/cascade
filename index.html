@@ -36,7 +36,9 @@
         <li ng-repeat="channel in server.channels"
             ng-click="switchToChannel(channel.name, channel.serverAddress)"
             ng-class="{selected: channel.name == currentChannel}"
-            class="item">&#9679; {{channel.name}}
+            class="item">&nbsp;&nbsp;{{channel.name}}
+            <span class="msgCounter"
+              ng-hide="isCurrentChannel(channel.name, channel.serverAddress) || channel.unread == 0">{{channel.unread}}</span>
         </li>
       </ul>
     </section>

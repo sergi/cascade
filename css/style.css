@@ -36,6 +36,11 @@ html, body {
   background-color: #e0eff1;
   color: #517478;
   -webkit-order: -1;
+  padding-left: 5px;
+}
+
+#channel-list section {
+  padding-top: 3px;
 }
 
 #channel-list .server-name {
@@ -60,6 +65,21 @@ html, body {
   color: #e0eff1;
   background-color: #517478;
 }
+
+#channel-list .msgCounter {
+    float: right;
+    text-align: right;
+    margin-right: 15px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding-left: 3px;
+    padding-right: 3px;
+    vertical-align: middle;
+    background-color: #517478;
+    color: #fff;
+    font-size: 10px;
+  }
+
 
 .channel-content {
   overflow-y: auto;
