@@ -3,7 +3,16 @@
   <meta charset="utf-8">
   <title>Cascade IRC</title>
   <link rel="stylesheet" type="text/css" href="css/style.css"/>
-  <script type="text/javascript" src="js/util.js"></script>
+  <script>
+
+    function markURL(obj) {
+      var re = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/g;
+      obj.text = obj.text.replace(re, '<a href="#" onclick="gui.Shell.openExternal(\'$1\');">$1</a>');
+      return obj;
+    }
+  </script>
+  <script src="js/util.js"></script>
+
   <script type="text/javascript" src="lib/angular.min.js"></script>
   <script type="text/javascript" src="lib/bindonce.js"></script>
 </head>
@@ -31,14 +40,14 @@
     <section ng-repeat="server in servers">
       <h3 ng-click="switchToServer(server.address)"
           ng-class="{selected: isCurrentServer(server.address)}">
-          {{server.address}}</h3>
+        {{server.address}}</h3>
       <ul>
         <li ng-repeat="channel in server.channels"
             ng-click="switchToChannel(channel.name, channel.serverAddress)"
             ng-class="{selected: channel.name == currentChannel}"
             class="item">&nbsp;&nbsp;{{channel.name}}
             <span class="msgCounter"
-              ng-hide="isCurrentChannel(channel.name, channel.serverAddress) || channel.unread == 0">{{channel.unread}}</span>
+                  ng-hide="isCurrentChannel(channel.name, channel.serverAddress) || channel.unread == 0">{{channel.unread}}</span>
         </li>
       </ul>
     </section>
@@ -52,14 +61,13 @@
   </form>
 </div>
 
-<script src="js/init.js"></script>
 <script src="js/app.js"></script>
 <script src="js/server.js"></script>
 <script src="js/channel.js"></script>
 <script src="js/input.js"></script>
-<!--<script src="js/main.js"></script>-->
 <script>
-  angular.module('cascade', ['pasvaz.bindonce'])
+  process.mainModule.exports.onload()
+  angular.module('cascade', ['pasvaz.bindonce']);
 </script>
 </body>
 </html>

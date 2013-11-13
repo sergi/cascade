@@ -1,4 +1,5 @@
 {
   "name": "cascade",
+  "node-main": "js/init.js",
   "main": "index.html"
 }

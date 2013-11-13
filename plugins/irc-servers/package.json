@@ -1,0 +1,11 @@
+{
+  "name": "irc-servers",
+  "version": "0.0.1",
+  "main": "irc-servers.js",
+  "private": true,
+
+  "plugin": {
+    "consumes": [],
+    "provides": ["servers"]
+  }
+}
