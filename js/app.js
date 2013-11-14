@@ -20,7 +20,7 @@ function AppController($scope) {
     var OVMsgCounter = server.observables._userMsgs.filter(function(m) {
       return !$scope.isCurrentChannel(m.to, serverName);
     }).subscribe(function(obj) {
-        var channel = getChannelByName(obj.to, serverName);
+        var channel = getChannelByName(obj.to, server);
         if (channel) {
           channel.unread += 1;
         }
