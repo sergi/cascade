@@ -3,14 +3,6 @@
   <meta charset="utf-8">
   <title>Cascade IRC</title>
   <link rel="stylesheet" type="text/css" href="css/style.css"/>
-  <script>
-
-    function markURL(obj) {
-      var re = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/g;
-      obj.text = obj.text.replace(re, '<a href="#" onclick="gui.Shell.openExternal(\'$1\');">$1</a>');
-      return obj;
-    }
-  </script>
   <script src="js/util.js"></script>
 
   <script type="text/javascript" src="lib/angular.min.js"></script>
