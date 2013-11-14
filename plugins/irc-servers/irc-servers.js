@@ -21,6 +21,11 @@ module.exports = function setup(options, imports, register) {
       });
   }
 
+  var findURLs = function(text) {
+    var re = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/g;
+    return text.match(re);
+  };
+
   var Config = JSON.parse(fs.readFileSync('config.json', {
     encoding: 'utf8'
   }));
@@ -55,16 +60,19 @@ module.exports = function setup(options, imports, register) {
       };
     });
 
-    var allMsgs = usersMsgs.merge(ownerMsgs);
+    var allMsgs = usersMsgs.merge(ownerMsgs).map(function(msg) {
+      msg.urls = findURLs(msg.text) || [];
+      return msg;
+    });
 
     var OVMotd = fromIrcEvent(ircClient, 'motd').selectMany(function(motd) {
       return Rx.Observable.fromArray(motd[0].split(/\n\r?/));
     }).map(function(m) {
-      return {
-        text: m,
-        motd: true
-      };
-    });
+        return {
+          text: m,
+          motd: true
+        };
+      });
 
     var OVTopic = fromIrcEvent(ircClient, 'topic').map(function(t) {
       return {
@@ -79,18 +87,18 @@ module.exports = function setup(options, imports, register) {
     var OVMode = fromIrcEvent(ircClient, '+mode')
       .merge(fromIrcEvent(ircClient, '-mode'))
       .map(function(m) {
-      var obj = {
-        action: m.__type[0], // First char ('+' or '-')
-        from: m[1] || server.address,
-        to: m[0],
-        mode: m[2],
-        user: m[3],
-        isMeta: true
-      };
-      obj.text = obj.from + ' sets mode ' + obj.action + obj.mode + ' ' +
-        (obj.user || '');
-      return obj;
-    });
+        var obj = {
+          action: m.__type[0], // First char ('+' or '-')
+          from: m[1] || server.address,
+          to: m[0],
+          mode: m[2],
+          user: m[3],
+          isMeta: true
+        };
+        obj.text = obj.from + ' sets mode ' + obj.action + obj.mode + ' ' +
+          (obj.user || '');
+        return obj;
+      });
 
     var OVJoin = fromIrcEvent(ircClient, 'join').map(function(j) {
       return {
@@ -126,17 +134,17 @@ module.exports = function setup(options, imports, register) {
     });
 
     var codes = ['001', '002', '003', '004', '251', '252', '253', '254', '255',
-        '265', '266', 'NOTICE'
+      '265', '266', 'NOTICE'
     ];
 
     var OVRaw = fromIrcEvent(ircClient, 'raw').filter(function(r) {
       return codes.indexOf(r[0].rawCommand) > -1;
     }).map(function(r) {
-      r[0].args.shift();
-      return {
-        text: r[0].args.join(' ')
-      };
-    });
+        r[0].args.shift();
+        return {
+          text: r[0].args.join(' ')
+        };
+      });
 
     /**
      * Observable for all private messages for which a channel has been created
@@ -146,7 +154,10 @@ module.exports = function setup(options, imports, register) {
       return m.to === ircClient.nick && _server.channels.some(function(c) {
         return c.name === m.from;
       });
-    });
+    }).map(function(msg) {
+        msg.urls = findURLs(msg.text) || [];
+        return msg;
+      });
 
     var _server = {
       address: server.address,
