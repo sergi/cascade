@@ -5,6 +5,13 @@ module.exports = function setup(options, imports, register) {
 
   var servers = [];
 
+  /**
+   * Creates an Observable from a node event and adds a type and a timestamp to
+   * the resulting array value.
+   * @param emitter {EventEmitter} Object emitting the event
+   * @param ev {String} Event name
+   * @returns {Rx.Observable}
+   */
   function fromIrcEvent(emitter, ev) {
     return Rx.Node.fromEvent(emitter, ev)
       .timestamp()
@@ -113,7 +120,9 @@ module.exports = function setup(options, imports, register) {
       return {
         to: j[0],
         from: j[1],
-        text: '<span class="part-arrow">&larr;</span>&nbsp;' + '<span class="mention">' + j[1] + '</span> left the channel' +
+        text: '<span class="part-arrow">&larr;</span>&nbsp;' +
+          '<span class="mention">' + j[1] +
+          '</span> left the channel' +
           (j[2] ? ' (' + j[2] + ').' : ''),
         isMeta: true
       };
@@ -131,6 +140,18 @@ module.exports = function setup(options, imports, register) {
         to: n[0],
         nicks: n[1]
       };
+    });
+
+    var OVNick = fromIrcEvent(ircClient, 'nick').map(function(n) {
+      return {
+        oldnick: n[0],
+        newnick: n[1],
+        channels: n[2],
+        isMeta: true,
+        text: '<span class="nick-change">&#x25cf;</span>&nbsp;' +
+          '<span class="mention">' + n[0] + '</span> is now known as ' +
+          '<span class="mention">' + n[1]
+      }
     });
 
     var codes = ['001', '002', '003', '004', '251', '252', '253', '254', '255',
@@ -174,6 +195,7 @@ module.exports = function setup(options, imports, register) {
         names: OVNames,
         motd: OVMotd,
         quit: OVQuit,
+        nick: OVNick,
         raw: OVRaw
       }
     };

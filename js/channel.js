@@ -50,6 +50,12 @@ function ChanCtrl($scope) {
     .map(markURL)
     .subscribe(msg);
 
+  var OVNickChange = serverObj.observables.nick
+    .filter(function(m) {
+      return m.channels.indexOf($scope.channel.name > -1);
+    })
+    .subscribe(msg);
+
   var OVChannelMsgs = serverObj.observables.allMsgs
     .filter(isCurrentChannel)
     .map(markNickMentions)
@@ -64,8 +70,8 @@ function ChanCtrl($scope) {
   var OVNames = serverObj.observables.names
     .filter(isCurrentChannel)
     .subscribe(function(n) {
-    $scope.$$phase || $scope.$apply(function() {
-      $scope.nicks = n.nicks;
+      $scope.$$phase || $scope.$apply(function() {
+        $scope.nicks = n.nicks;
+      });
     });
-  });
 }

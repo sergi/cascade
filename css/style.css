@@ -23,8 +23,8 @@ html, body {
 
 #channel-main {
   min-width: 300px;
-  -webkit-box-shadow: 0px 0px 8px 2px rgba(0, 0, 0, 0.57);
-  box-shadow: 0px 0px 8px 2px rgba(0, 0, 0, 0.57);
+  /*-webkit-box-shadow: 0px 0px 8px 2px rgba(0, 0, 0, 0.57);*/
+  /*box-shadow: 0px 0px 8px 2px rgba(0, 0, 0, 0.57);*/
   overflow: hidden;
   height: 100%;
   -webkit-flex: 1;
@@ -67,19 +67,18 @@ html, body {
 }
 
 #channel-list .msgCounter {
-    float: right;
-    text-align: right;
-    margin-right: 15px;
-    border: 1px solid transparent;
-    border-radius: 6px;
-    padding-left: 3px;
-    padding-right: 3px;
-    vertical-align: middle;
-    background-color: #517478;
-    color: #fff;
-    font-size: 10px;
-  }
-
+  float: right;
+  text-align: right;
+  margin-right: 15px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding-left: 3px;
+  padding-right: 3px;
+  vertical-align: middle;
+  background-color: #517478;
+  color: #fff;
+  font-size: 10px;
+}
 
 .channel-content {
   overflow-y: auto;
@@ -155,6 +154,8 @@ html, body {
 }
 
 .line-container {
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
   -webkit-flex: 1;
   overflow-y: auto;
 }
@@ -173,7 +174,7 @@ html, body {
   display: none;
 }
 
-.join-arrow { font-weight: bold; color: forestgreen; }
+.join-arrow, .nick-change { font-weight: bold; color: forestgreen; }
 
 .part-arrow { font-weight: bold; color: firebrick; }
 
