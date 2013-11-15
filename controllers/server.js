@@ -5,6 +5,7 @@ function ServerCtrl($scope) {
   $scope.logs = [];
 
   function msg(obj) {
+    obj.text = escapeHTML(obj.text);
     $scope.logs.push(obj);
     $scope.$$phase || $scope.$apply();
   }
