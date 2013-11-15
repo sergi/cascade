@@ -7,6 +7,15 @@ function AppController($scope) {
         return server.channels[i];
   }
 
+  Actions.subscribe(function(action){
+    var msgEl = document.getElementById(action.hash + '');
+    if (msgEl) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = action.content;
+      msgEl.appendChild(tr);
+    }
+  })
+
   // Iterate through the servers in the config file definition and create a
   // server object for each one.
   $scope.servers.forEach(function(server) {
@@ -17,7 +26,7 @@ function AppController($scope) {
      * Increments the `unread` counter in channels that are not the current
      * one.
      */
-    var OVMsgCounter = server.observables._userMsgs.filter(function(m) {
+    var OVMsgCounter = server.observables.allMessages.filter(function(m) {
       return !$scope.isCurrentChannel(m.to, serverName);
     }).subscribe(function(obj) {
         var channel = getChannelByName(obj.to, server);
@@ -31,7 +40,7 @@ function AppController($scope) {
      * We will create a channel with the first message buffered in first.
      */
     var OVPrivMsgNoChannel =
-      server.observables._userMsgs.filter(function(m) {
+      server.observables.allMessages.filter(function(m) {
         return m.to === ircClient.nick && server.channels.every(function(c) {
           return c.name !== m.from;
         });

@@ -2,6 +2,7 @@ module.exports = function setup(options, imports, register) {
   var fs = require('fs');
   var Rx = require('rx');
   var irc = require('irc');
+  var crypto = require('crypto');
 
   var servers = [];
 
@@ -33,6 +34,16 @@ module.exports = function setup(options, imports, register) {
     return text.match(re);
   };
 
+  function md5(str) {
+    return crypto.createHash('md5').update(str).digest('hex');
+  }
+
+  function addMetadata(msg) {
+    msg.hash = md5(msg.from + msg.to + msg.text + msg.__timestamp);
+    msg.urls = findURLs(msg.text) || [];
+    return msg;
+  }
+
   var Config = JSON.parse(fs.readFileSync('config.json', {
     encoding: 'utf8'
   }));
@@ -44,21 +55,24 @@ module.exports = function setup(options, imports, register) {
       showErrors: true
     });
 
-    var _userMsgs = fromIrcEvent(ircClient, 'message').map(function(m) {
+    /*************************************************************
+     * Observers dealing with IRC messages from users
+     *************************************************************/
+
+    var allMessages = fromIrcEvent(ircClient, 'message').map(function(m) {
       return {
         from: m[0],
         to: m[1],
         text: m[2],
-        time: m.__timestamp
+        time: m.__timestamp,
       };
     });
 
-    // Below we will create all the observers from IRC events.
-    var usersMsgs = _userMsgs.filter(function(m) {
+    var nonPrivateMessages = allMessages.filter(function(m) {
       return m.to !== ircClient.nick;
     });
 
-    var ownerMsgs = fromIrcEvent(ircClient, 'selfMessage').map(function(m) {
+    var ownMessages = fromIrcEvent(ircClient, 'selfMessage').map(function(m) {
       return {
         from: ircClient.nick,
         to: m[0],
@@ -67,10 +81,21 @@ module.exports = function setup(options, imports, register) {
       };
     });
 
-    var allMsgs = usersMsgs.merge(ownerMsgs).map(function(msg) {
-      msg.urls = findURLs(msg.text) || [];
-      return msg;
-    });
+    var channelMessages = nonPrivateMessages
+      .merge(ownMessages)
+      .map(addMetadata);
+
+    // Observable for all private messages for which a channel has been created
+    // so that we don't have to create a channel first.
+    var privMsgs = allMessages.filter(function(m) {
+      return m.to === ircClient.nick && _server.channels.some(function(c) {
+        return c.name === m.from;
+      });
+    }).map(addMetadata);
+
+    /*************************************************************
+     * Observers dealing with other IRC events
+     *************************************************************/
 
     var OVMotd = fromIrcEvent(ircClient, 'motd').selectMany(function(motd) {
       return Rx.Observable.fromArray(motd[0].split(/\n\r?/));
@@ -167,26 +192,13 @@ module.exports = function setup(options, imports, register) {
         };
       });
 
-    /**
-     * Observable for all private messages for which a channel has been created
-     * so that we don't have to create a channel first.
-     */
-    var privMsgs = _userMsgs.filter(function(m) {
-      return m.to === ircClient.nick && _server.channels.some(function(c) {
-        return c.name === m.from;
-      });
-    }).map(function(msg) {
-        msg.urls = findURLs(msg.text) || [];
-        return msg;
-      });
-
     var _server = {
       address: server.address,
       ircClient: ircClient,
       channels: [],
       observables: {
-        _userMsgs: _userMsgs,
-        allMsgs: allMsgs,
+        allMessages: allMessages,
+        channelMessages: channelMessages,
         privMsgs: privMsgs,
         topic: OVTopic,
         mode: OVMode,

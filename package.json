@@ -1,5 +1,14 @@
 {
   "name": "cascade",
-  "node-main": "js/init.js",
-  "main": "index.html"
+  "node-main": "init.js",
+  "main": "index.html",
+  "version": "0.1.0",
+  "keywords": ["irc", "desktop"],
+
+  "dependencies": {
+    "architect": "~0.1.10",
+    "architect-eventbus": "~0.0.1",
+    "rx": "2.2.2",
+    "irc": "~0.3.6"
+  }
 }

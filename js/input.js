@@ -1,4 +1,3 @@
-
 function InputController($scope) {
   var re = /^\/(\w+)\s*(.+)/;
   $scope.msg = "";
@@ -13,16 +12,18 @@ function InputController($scope) {
     var server = getServer();
     if (!server) return;
     var client = server.ircClient;
+    var msg = $scope.msg;
+    $scope.msg = '';
 
-    var isCommand = $scope.msg.search(re) !== -1;
-    if (!isCommand) {
-
-      client.say($scope.currentChannel, $scope.msg);
-    } else {
-      var cmd = $scope.msg.match(re)[1].toLowerCase();
-      var args = $scope.msg.match(re)[2];
+    var isCommand = msg.search(re) !== -1;
+    if (isCommand) {
+      var cmd = msg.match(re)[1].toLowerCase();
+      var args = msg.match(re)[2];
 
       switch (cmd) {
+        case 'nick':
+          client.send(cmd, args);
+          break;
         case 'join':
           client.join(args);
           break;
@@ -33,7 +34,8 @@ function InputController($scope) {
             client.part(args);
           break;
       }
+    } else {
+      client.say($scope.currentChannel, msg);
     }
-    $scope.msg = '';
   });
 }

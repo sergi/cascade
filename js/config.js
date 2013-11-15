@@ -1,4 +1,5 @@
 module.exports = [
+  "../node_modules/architect-eventbus",
   "../plugins/irc-servers",
-  "../plugins/notifications"
+  "../plugins/bugzilla"
 ];

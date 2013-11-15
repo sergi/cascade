@@ -1,0 +1,15 @@
+{
+  "name": "bugzilla",
+  "version": "0.0.1",
+  "description": "Plugin for Cascade IRC client that retrieves information for mentioned bug IDs from Mozilla's Bugzilla ",
+
+  "main": "./bugzilla.js",
+
+  "dependencies": {
+    "bz-json": "~0.1.1"
+  },
+
+  "plugin": {
+    "consumes": ["servers", "eventbus"]
+  }
+}
