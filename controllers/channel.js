@@ -10,7 +10,6 @@ function ChanCtrl($scope) {
    * @param obj {Object} Message object
    */
   function msg(obj) {
-    obj.text = escapeHTML(obj.text);
     $scope.logs.push(obj);
     $scope.$$phase || $scope.$apply();
   }
@@ -52,6 +51,7 @@ function ChanCtrl($scope) {
   var evts = serverObj.observables;
   Rx.Observable.merge(evts.join, evts.part, evts.mode, evts.topic)
     .filter(isCurrentChannel)
+    .map(escapeHTML)
     .map(markURL)
     .subscribe(msg);
 
@@ -67,11 +67,13 @@ function ChanCtrl($scope) {
   var OVChannelMsgs = serverObj.observables.channelMessages
     .filter(isCurrentChannel)
     .map(markNickMentions)
+    .map(escapeHTML)
     .map(markURL)
     .subscribe(msg);
 
   var OVPrivateMsgs = serverObj.observables.privMsgs
     .filter(isCurrentChannel)
+    .map(escapeHTML)
     .map(markURL)
     .subscribe(msg);
 

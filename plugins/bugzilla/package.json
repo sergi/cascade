@@ -10,6 +10,6 @@
   },
 
   "plugin": {
-    "consumes": ["servers", "eventbus"]
+    "consumes": ["actionList"]
   }
 }

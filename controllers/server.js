@@ -5,7 +5,6 @@ function ServerCtrl($scope) {
   $scope.logs = [];
 
   function msg(obj) {
-    obj.text = escapeHTML(obj.text);
     $scope.logs.push(obj);
     $scope.$$phase || $scope.$apply();
   }
@@ -14,6 +13,7 @@ function ServerCtrl($scope) {
   var ircClient = server.ircClient;
 
   var OVMotd = server.observables.motd
+    .map(escapeHTML)
     .map(markURL)
     .subscribe(msg);
 

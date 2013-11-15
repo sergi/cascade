@@ -7,11 +7,11 @@ function AppController($scope) {
         return server.channels[i];
   }
 
-  Actions.subscribe(function(action){
+  UrlActions.subscribe(function(action){
     var msgEl = document.getElementById(action.hash + '');
     if (msgEl) {
       var tr = document.createElement('tr');
-      tr.innerHTML = action.content;
+      tr.innerHTML = action.action;
       msgEl.appendChild(tr);
     }
   });
