@@ -3,7 +3,7 @@
   <meta charset="utf-8">
   <title>Cascade IRC</title>
   <link rel="stylesheet" type="text/css" href="css/style.css"/>
-  <script src="js/util.js"></script>
+  <script src="controllers/util.js"></script>
 
   <script type="text/javascript" src="lib/angular.min.js"></script>
   <script type="text/javascript" src="lib/bindonce.js"></script>
@@ -53,10 +53,10 @@
   </form>
 </div>
 
-<script src="js/app.js"></script>
-<script src="js/server.js"></script>
-<script src="js/channel.js"></script>
-<script src="js/input.js"></script>
+<script src="controllers/app.js"></script>
+<script src="controllers/server.js"></script>
+<script src="controllers/channel.js"></script>
+<script src="controllers/input.js"></script>
 <script>
   process.mainModule.exports.onload()
   angular.module('cascade', ['pasvaz.bindonce']);

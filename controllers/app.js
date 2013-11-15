@@ -14,7 +14,7 @@ function AppController($scope) {
       tr.innerHTML = action.content;
       msgEl.appendChild(tr);
     }
-  })
+  });
 
   // Iterate through the servers in the config file definition and create a
   // server object for each one.

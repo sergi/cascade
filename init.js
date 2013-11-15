@@ -1,11 +1,11 @@
 var Rx = require('Rx');
-var path = require("path");
-var architect = require("architect");
+var path = require('path');
+var architect = require('architect');
 var util = require('util');
 //var gui = require('nw.gui');
 
 var Servers, Actions;
-var config = architect.loadConfig(path.join(process.cwd(), 'js', 'config.js'));
+var config = architect.loadConfig(path.join(process.cwd(), 'config.js'));
 
 architect.createApp(config, function(err, app) {
   if (err) {
@@ -17,7 +17,7 @@ architect.createApp(config, function(err, app) {
   Actions = Rx.Node.fromEvent(app.getService('eventbus'), 'msgAction')
     .map(function(action) { return action[0]; });
 
-  util.log("Cascade is ready" + util.inspect(app.services));
+  util.log('Cascade is ready' + util.inspect(app.services));
 });
 
 /*

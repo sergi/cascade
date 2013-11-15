@@ -5,6 +5,10 @@ function ChanCtrl($scope) {
 
   var serverObj = $scope.$parent.getServerByName($scope.channel.serverAddress);
 
+  /**
+   * Add a new message to this channel and tell angular.
+   * @param obj {Object} Message object
+   */
   function msg(obj) {
     $scope.logs.push(obj);
     $scope.$$phase || $scope.$apply();
@@ -52,11 +56,14 @@ function ChanCtrl($scope) {
 
   var OVNickChange = serverObj.observables.nick
     .filter(function(m) {
-      return m.channels.indexOf($scope.channel.name > -1);
+      // If the user whom changed her nick is in this channel and this is a
+      // real channel (not a private message).
+      return m.channels.indexOf($scope.channel.name > -1) &&
+        $scope.channel.name[0] === '#';
     })
     .subscribe(msg);
 
-  var OVChannelMsgs = serverObj.observables.allMsgs
+  var OVChannelMsgs = serverObj.observables.channelMessages
     .filter(isCurrentChannel)
     .map(markNickMentions)
     .map(markURL)

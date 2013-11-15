@@ -8,11 +8,11 @@ var client = bz.createClient({
 
 module.exports = function setup(options, imports, register) {
   var bus = imports.eventbus;
-  var allMsgs = imports.servers.reduce(function(p, c) {
-    return p.observables.allMsgs.merge(c.observables.allMsgs);
+  var messages = imports.servers.reduce(function(p, c) {
+    return p.observables.channelMessages.merge(c.observables.channelMessages);
   });
 
-  allMsgs.subscribe(function(msg) {
+  messages.subscribe(function(msg) {
     msg.urls.forEach(function(_url) {
       var parsed = url.parse(_url);
       if (parsed.host === 'bugzilla.mozilla.org' && typeof parsed.query === 'string') {
