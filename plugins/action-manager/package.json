@@ -1,0 +1,12 @@
+{
+  "name": "action-manager",
+  "version": "0.0.1",
+
+  "main": "./action-manager.js",
+  "private": true,
+
+  "plugin": {
+    "consumes": ["eventbus", "servers"],
+    "provides": ["actionList"]
+  }
+}

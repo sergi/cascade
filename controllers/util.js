@@ -1,4 +1,4 @@
-var escapeRegExp, markURL;
+var escapeRegExp, markURL, escapeHTML;
 
 (function() {
   // Referring to the table here:
@@ -30,5 +30,10 @@ var escapeRegExp, markURL;
     var re = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/g;
     obj.text = obj.text.replace(re, '<a href="#" onclick="gui.Shell.openExternal(\'$1\');">$1</a>');
     return obj;
-  }
+  };
+
+  escapeHTML = function escapeHTML(msgObj) {
+    msgObj.text = msgObj.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return msgObj;
+  };
 }());

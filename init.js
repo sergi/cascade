@@ -4,7 +4,7 @@ var architect = require('architect');
 var util = require('util');
 //var gui = require('nw.gui');
 
-var Servers, Actions;
+var Servers, UrlActions;
 var config = architect.loadConfig(path.join(process.cwd(), 'config.js'));
 
 architect.createApp(config, function(err, app) {
@@ -14,7 +14,7 @@ architect.createApp(config, function(err, app) {
 
   Servers = app.getService('servers');
 
-  Actions = Rx.Node.fromEvent(app.getService('eventbus'), 'msgAction')
+  UrlActions = Rx.Node.fromEvent(app.getService('eventbus'), 'urlAction')
     .map(function(action) { return action[0]; });
 
   util.log('Cascade is ready' + util.inspect(app.services));
@@ -28,6 +28,6 @@ architect.createApp(config, function(err, app) {
 
 exports.onload = function() {
   window.Servers = Servers;
-  window.Actions = Actions;
+  window.UrlActions = UrlActions;
   window.Rx = Rx;
 };

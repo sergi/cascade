@@ -13,20 +13,29 @@ module.exports = function setup(options, imports, register) {
    * @param ev {String} Event name
    * @returns {Rx.Observable}
    */
+
   function fromIrcEvent(emitter, ev) {
     return Rx.Node.fromEvent(emitter, ev)
       .timestamp()
       .map(function(obj) {
-        var arr;
-        if (typeof obj.value === 'string')
-          arr = [obj.value];
-        else
-          arr = Array.prototype.slice.call(obj.value);
+      var arr;
+      if (typeof obj.value === 'string')
+        arr = [obj.value];
+      else
+        arr = Array.prototype.slice.call(obj.value);
 
-        arr.__timestamp = obj.timestamp;
-        arr.__type = ev;
-        return arr;
-      });
+      arr.__timestamp = obj.timestamp;
+      arr.__type = ev;
+      return arr;
+    });
+  }
+
+  function escapeHTML(text) {
+    text = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    return text;
   }
 
   var findURLs = function(text) {
@@ -63,7 +72,7 @@ module.exports = function setup(options, imports, register) {
       return {
         from: m[0],
         to: m[1],
-        text: m[2],
+        text: escapeHTML(m[2]),
         time: m.__timestamp,
       };
     });
@@ -76,7 +85,7 @@ module.exports = function setup(options, imports, register) {
       return {
         from: ircClient.nick,
         to: m[0],
-        text: m[1],
+        text: escapeHTML(m[1]),
         time: m.__timestamp
       };
     });
@@ -100,11 +109,11 @@ module.exports = function setup(options, imports, register) {
     var OVMotd = fromIrcEvent(ircClient, 'motd').selectMany(function(motd) {
       return Rx.Observable.fromArray(motd[0].split(/\n\r?/));
     }).map(function(m) {
-        return {
-          text: m,
-          motd: true
-        };
-      });
+      return {
+        text: escapeHTML(m),
+        motd: true
+      };
+    });
 
     var OVTopic = fromIrcEvent(ircClient, 'topic').map(function(t) {
       return {
@@ -112,25 +121,25 @@ module.exports = function setup(options, imports, register) {
         topic: t[1],
         from: t[2],
         isMeta: true,
-        text: 'Topic is ' + t[1]
+        text: 'Topic is ' + escapeHTML(t[1])
       };
     });
 
     var OVMode = fromIrcEvent(ircClient, '+mode')
       .merge(fromIrcEvent(ircClient, '-mode'))
       .map(function(m) {
-        var obj = {
-          action: m.__type[0], // First char ('+' or '-')
-          from: m[1] || server.address,
-          to: m[0],
-          mode: m[2],
-          user: m[3],
-          isMeta: true
-        };
-        obj.text = obj.from + ' sets mode ' + obj.action + obj.mode + ' ' +
-          (obj.user || '');
-        return obj;
-      });
+      var obj = {
+        action: m.__type[0], // First char ('+' or '-')
+        from: m[1] || server.address,
+        to: m[0],
+        mode: m[2],
+        user: m[3],
+        isMeta: true
+      };
+      obj.text = obj.from + ' sets mode ' + obj.action + obj.mode + ' ' +
+        (obj.user || '');
+      return obj;
+    });
 
     var OVJoin = fromIrcEvent(ircClient, 'join').map(function(j) {
       return {
@@ -145,9 +154,7 @@ module.exports = function setup(options, imports, register) {
       return {
         to: j[0],
         from: j[1],
-        text: '<span class="part-arrow">&larr;</span>&nbsp;' +
-          '<span class="mention">' + j[1] +
-          '</span> left the channel' +
+        text: '<span class="part-arrow">&larr;</span>&nbsp;' + '<span class="mention">' + j[1] + '</span> left the channel' +
           (j[2] ? ' (' + j[2] + ').' : ''),
         isMeta: true
       };
@@ -173,24 +180,22 @@ module.exports = function setup(options, imports, register) {
         newnick: n[1],
         channels: n[2],
         isMeta: true,
-        text: '<span class="nick-change">&#x25cf;</span>&nbsp;' +
-          '<span class="mention">' + n[0] + '</span> is now known as ' +
-          '<span class="mention">' + n[1]
+        text: '<span class="nick-change">&#x25cf;</span>&nbsp;' + '<span class="mention">' + n[0] + '</span> is now known as ' + '<span class="mention">' + n[1]
       }
     });
 
     var codes = ['001', '002', '003', '004', '251', '252', '253', '254', '255',
-      '265', '266', 'NOTICE'
+        '265', '266', 'NOTICE'
     ];
 
     var OVRaw = fromIrcEvent(ircClient, 'raw').filter(function(r) {
       return codes.indexOf(r[0].rawCommand) > -1;
     }).map(function(r) {
-        r[0].args.shift();
-        return {
-          text: r[0].args.join(' ')
-        };
-      });
+      r[0].args.shift();
+      return {
+        text: escapeHTML(r[0].args.join(' '))
+      };
+    });
 
     var _server = {
       address: server.address,

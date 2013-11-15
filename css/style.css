@@ -104,6 +104,14 @@ html, body {
   -webkit-flex: 0 0 10em;
 }
 
+.username {
+  cursor:pointer;
+}
+
+.username:hover {
+  color: #517478;
+}
+
 .input-bar {
   border-top: 1px solid #999;
 }
@@ -206,3 +214,4 @@ html, body {
   padding-top: 1px;
   padding-bottom: 1px;
 }
+
