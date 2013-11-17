@@ -3,7 +3,6 @@ var util = require('util');
 var Rx = require('rx');
 
 module.exports = function setup(options, imports, register) {
-  var bus = imports.eventbus;
   var actions = [];
   var messages = imports.servers.reduce(function(p, c) {
     return p.observables.channelMessages.merge(c.observables.channelMessages);
@@ -26,7 +25,7 @@ module.exports = function setup(options, imports, register) {
         action.check(msg.url) && action.process(msg.url, function(result) {
           if (!result) return;
 
-          bus.emit('urlAction', {
+          imports.eventbus.emit('urlAction', {
             hash: msg.hash,
             action: result
           });
