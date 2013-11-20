@@ -137,7 +137,12 @@ html, body {
 }
 
 .line td {
-  padding: 3px;
+  padding-top: 3px;
+}
+
+.line iframe {
+  border: 0;
+  width: 100%;
 }
 
 .line .nick {

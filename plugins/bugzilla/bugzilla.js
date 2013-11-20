@@ -20,7 +20,12 @@ module.exports = function setup(options, imports, register) {
         }
 
         var result = bug.result.bugs[0];
-        callback(result.summary)
+        callback({
+          name: 'bugzilla', //plugin name
+          template: 'bugzilla.html',
+          css: 'bugzilla.css',
+          title: result.summary
+        });
       });
     }
 

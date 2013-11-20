@@ -7,13 +7,32 @@ function AppController($scope) {
         return server.channels[i];
   }
 
-  UrlActions.subscribe(function(action){
-    var msgEl = document.getElementById(action.hash + '');
-    if (msgEl) {
-      var tr = document.createElement('tr');
-      tr.innerHTML = action.action;
-      msgEl.appendChild(tr);
-    }
+  UrlActions.subscribe(function(obj) {
+    var action = obj.action;
+    var route = '../plugins/' + action.name + '/';
+    var msgEl = document.getElementById(obj.hash + '');
+    if (!msgEl) return;
+
+    var tr = document.createElement('tr');
+    var td = document.createElement('td');
+    var iframe = document.createElement('iframe');
+    tr.appendChild(td);
+    td.appendChild(iframe);
+    td.setAttribute('colspan', '2');
+
+    iframe.src = "views/iframe.html";
+    iframe.addEventListener('load', function(e) {
+      iframe.contentDocument.body.innerHTML = action.title;
+      if (action.css) {
+        var cssLink = iframe.contentDocument.createElement("link");
+        cssLink.href = route + action.css;
+        cssLink.rel = "stylesheet";
+        cssLink.type = "text/css";
+        iframe.contentDocument.head.appendChild(cssLink);
+      }
+    });
+
+    msgEl.appendChild(tr);
   });
 
   // Iterate through the servers in the config file definition and create a
@@ -29,11 +48,11 @@ function AppController($scope) {
     var OVMsgCounter = server.observables.allMessages.filter(function(m) {
       return !$scope.isCurrentChannel(m.to, serverName);
     }).subscribe(function(obj) {
-        var channel = getChannelByName(obj.to, server);
-        if (channel) {
-          channel.unread += 1;
-        }
-      });
+      var channel = getChannelByName(obj.to, server);
+      if (channel) {
+        channel.unread += 1;
+      }
+    });
 
     /**
      * Observable for private messages that don't have a channel created yet.
@@ -41,22 +60,22 @@ function AppController($scope) {
      */
     var OVPrivMsgNoChannel =
       server.observables.allMessages.filter(function(m) {
-        return m.to === ircClient.nick && server.channels.every(function(c) {
-          return c.name !== m.from;
-        });
-      }).subscribe(function createNewChannel(j) {
-          var channel = {
-            name: j.from,
-            serverAddress: server.address,
-            privMsg: true,
-            logs: [j],
-            unread: 0
-          };
+      return m.to === ircClient.nick && server.channels.every(function(c) {
+        return c.name !== m.from;
+      });
+    }).subscribe(function createNewChannel(j) {
+      var channel = {
+        name: j.from,
+        serverAddress: server.address,
+        privMsg: true,
+        logs: [j],
+        unread: 0
+      };
 
-          server.channels.push(channel);
-          $scope.switchToChannel(channel.name, server.address);
-          $scope.$$phase || $scope.$apply();
-        });
+      server.channels.push(channel);
+      $scope.switchToChannel(channel.name, server.address);
+      $scope.$$phase || $scope.$apply();
+    });
 
     /**
      * Observable to all the join events in which the user is the one joining.
@@ -66,19 +85,19 @@ function AppController($scope) {
     var OVAddChannel = server.observables.join.filter(function(j) {
       return j.from === ircClient.nick;
     }).subscribe(function(j) {
-        var channel = {
-          name: j.to,
-          serverAddress: server.address,
-          unread: 0
-        };
+      var channel = {
+        name: j.to,
+        serverAddress: server.address,
+        unread: 0
+      };
 
-        $scope.$$phase || $scope.$apply(function() {
-          server.channels.push(channel);
-          if (!$scope.currentChannel) {
-            $scope.switchToChannel(channel.name, server.address);
-          }
-        });
+      $scope.$$phase || $scope.$apply(function() {
+        server.channels.push(channel);
+        if (!$scope.currentChannel) {
+          $scope.switchToChannel(channel.name, server.address);
+        }
       });
+    });
   });
 
   /**
@@ -139,4 +158,3 @@ function AppController($scope) {
     return $scope.currentServer == serverName && !$scope.currentChannel;
   };
 }
-
