@@ -24,3 +24,7 @@ is hardcoded for now. As I said, it is in a veeery early stage).
 ## Plugins
 
 TBD
+
+## License
+
+GPLv2
