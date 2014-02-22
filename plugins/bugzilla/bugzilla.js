@@ -24,7 +24,9 @@ module.exports = function setup(options, imports, register) {
           name: 'bugzilla', //plugin name
           template: 'bugzilla.html',
           css: 'bugzilla.css',
-          title: result.summary
+          model: {
+            title: result.summary
+          }
         });
       });
     }

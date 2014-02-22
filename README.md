@@ -7,6 +7,8 @@ mind, so that adding features on top of it should be very easy for any
 JavaScript developer. The aim is to have a client like HipChat or Campfire, but
 that uses the existing IRC infrastructure.
 
+![Screenshot](https://dl.dropboxusercontent.com/u/136393/img/screenshot.png)
+
 ## Run it
 
 In order to run the current version, you should download node-webkit, go to the

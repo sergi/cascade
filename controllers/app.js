@@ -1,3 +1,7 @@
+var Mustache = require("mustache");
+var fs = require('fs');
+var path = require("path");
+
 function AppController($scope) {
   $scope.servers = Servers;
 
@@ -21,19 +25,29 @@ function AppController($scope) {
     td.setAttribute('colspan', '2');
 
     iframe.src = "views/iframe.html";
-    iframe.addEventListener('load', function(e) {
-      iframe.contentDocument.body.innerHTML = action.title;
-      if (action.css) {
-        var cssLink = iframe.contentDocument.createElement("link");
-        cssLink.href = route + action.css;
-        cssLink.rel = "stylesheet";
-        cssLink.type = "text/css";
-        iframe.contentDocument.head.appendChild(cssLink);
-      }
-    });
+    if (action.template) {
+      var fileContents = fs.readFileSync(
+        path.join(process.cwd(), 'plugins', action.name, action.template), {
+        encoding: "utf8"
+      });
 
-    msgEl.appendChild(tr);
-  });
+      iframe.addEventListener('load', function(e) {
+        iframe.contentDocument.body.innerHTML =
+          Mustache.render(fileContents, action.model);
+
+        if (action.css) {
+          var cssLink = iframe.contentDocument.createElement("link");
+          cssLink.href = route + action.css;
+          cssLink.rel = "stylesheet";
+          cssLink.type = "text/css";
+          iframe.contentDocument.head.appendChild(cssLink);
+        }
+
+      });
+      msgEl.appendChild(tr);
+    }
+  })
+
 
   // Iterate through the servers in the config file definition and create a
   // server object for each one.

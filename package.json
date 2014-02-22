@@ -9,6 +9,7 @@
     "architect": "~0.1.10",
     "architect-eventbus": "~0.0.1",
     "rx": "2.2.2",
-    "irc": "~0.3.6"
+    "irc": "~0.3.6",
+    "mustache": "~0.7.0"
   }
 }
